@@ -60,5 +60,5 @@ jobs:
         with:
           app-name: 'bharathomes'
           slot-name: 'Production'
-          package: dist/applet
+          package: .
           
