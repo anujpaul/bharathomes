@@ -1,6 +1,7 @@
 import { Component, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LucideAngularModule, Search, MapPin } from 'lucide-angular';
+import { environment } from '../../../environments/environment'
 
 @Component({
   selector: 'app-hero',
@@ -10,7 +11,7 @@ import { LucideAngularModule, Search, MapPin } from 'lucide-angular';
     <section class="relative h-[600px] flex items-center justify-center overflow-hidden">
       <div class="absolute inset-0 z-0">
         <img
-          src="https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=1920&q=80"
+          [src]="heroImage"
           alt="Agra Taj Mahal"
           class="w-full h-full object-cover"
           referrerPolicy="no-referrer"
@@ -59,7 +60,7 @@ export class HeroComponent {
   SearchIcon = Search;
   MapPinIcon = MapPin;
   tags = ['Noida Expressway', 'Yamuna Expressway', 'Agra Expressway'];
-
+  heroImage =`${environment.blobBaseUrl}/images/TajMahalDoor.avif?${environment.sasToken}`;
   onInputChange(event: Event) {
     const value = (event.target as HTMLInputElement).value;
     this.search.emit(value);
