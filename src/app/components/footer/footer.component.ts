@@ -59,15 +59,15 @@ import { LucideAngularModule, Home, Facebook, Twitter, Instagram, Linkedin, Mail
             <ul class="space-y-4 text-sm">
               <li class="flex items-start gap-3">
                 <lucide-icon [name]="MapPinIcon" class="w-5 h-5 text-blue-400 shrink-0"></lucide-icon>
-                <span>Sector 62, Noida, Uttar Pradesh, 201301</span>
+                <span>9 Sarojni Nagar, Sikandra Bodla Road, Agra, Uttar Pradesh</span>
               </li>
               <li class="flex items-center gap-3">
                 <lucide-icon [name]="PhoneIcon" class="w-5 h-5 text-blue-400 shrink-0"></lucide-icon>
-                <span>+91 120 456 7890</span>
+                <span>+91 97595 98991</span>
               </li>
               <li class="flex items-center gap-3">
                 <lucide-icon [name]="MailIcon" class="w-5 h-5 text-blue-400 shrink-0"></lucide-icon>
-                <span>contact@bharathomes.in</span>
+                <span>sunnypaul@bharathomes.in</span>
               </li>
             </ul>
           </div>
