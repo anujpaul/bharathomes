@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { HeroComponent } from './components/hero/hero.component';
@@ -6,8 +6,10 @@ import { FiltersComponent } from './components/filters/filters.component';
 import { PropertyCardComponent } from './components/property-card/property-card.component';
 import { AgentCardComponent } from './components/agent-card/agent-card.component';
 import { FooterComponent } from './components/footer/footer.component';
-import { PROPERTIES, AGENTS } from '../data';
-import { Property } from '../types';
+// import { PROPERTIES, AGENTS } from '../data';
+import { Agent, Property } from '../types';
+import { PropertyService } from './services/property-service';
+import { AgentService } from './services/agent-service';
 
 @Component({
   selector: 'app-root',
@@ -28,7 +30,7 @@ import { Property } from '../types';
       <main class="pt-16">
         <app-hero (search)="setSearchQuery($event)"></app-hero>
         
-        <app-filters 
+        <!-- <app-filters 
           [selectedCity]="selectedCity"
           (selectedCityChange)="selectedCity = $event"
           [selectedType]="selectedType"
@@ -36,10 +38,20 @@ import { Property } from '../types';
           [priceRange]="priceRange"
           (priceRangeChange)="priceRange = $event"
           (reset)="resetFilters()"
+        ></app-filters> -->
+
+        <app-filters 
+          [selectedCity]="selectedCity()"
+          (selectedCityChange)="selectedCity.set($event)"
+          [selectedType]="selectedType()"
+          (selectedTypeChange)="selectedType.set($event)"
+          [priceRange]="priceRange()"
+          (priceRangeChange)="priceRange.set($event)"
+          (reset)="resetFilters()"
         ></app-filters>
 
         <!-- Featured Section -->
-        @if (searchQuery === '' && selectedCity === 'All Cities') {
+        <!-- @if (searchQuery === '' && selectedCity === 'All Cities') {
           <section class="py-20 bg-gray-50/50">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div class="flex justify-between items-end mb-12">
@@ -57,12 +69,14 @@ import { Property } from '../types';
               </div>
             </div>
           </section>
-        }
+        } -->
+
+        
 
         <!-- Main Listings Grid -->
         <section class="py-20">
           <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-12">
+            <!-- <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-12">
               <div>
                 <h2 class="text-3xl font-black text-gray-900 tracking-tight">
                   {{selectedCity === 'All Cities' ? 'Properties in Uttar Pradesh' : 'Properties in ' + selectedCity}}
@@ -74,11 +88,16 @@ import { Property } from '../types';
                 <button class="px-4 py-2 bg-white text-gray-900 font-bold text-sm rounded-lg shadow-sm">Grid View</button>
                 <button class="px-4 py-2 text-gray-500 font-bold text-sm rounded-lg hover:text-gray-900">Map View</button>
               </div>
+            </div> -->
+            <div>
+              <h2 class="text-3xl font-black text-gray-900 tracking-tight">
+                {{selectedCity() === 'All Cities' ? 'Properties in Uttar Pradesh' : 'Properties in ' + selectedCity()}}
+              </h2>
+              <p class="text-gray-500 mt-1 font-medium">Found {{filteredProperties().length}} results</p>
             </div>
-
-            @if (filteredProperties.length > 0) {
+            @if (filteredProperties().length > 0) {
               <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                @for (property of filteredProperties; track property.id) {
+                @for (property of filteredProperties(); track property.id) {
                   <app-property-card [property]="property"></app-property-card>
                 }
               </div>
@@ -116,7 +135,7 @@ import { Property } from '../types';
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              @for (agent of agents; track agent.id) {
+              @for (agent of agents(); track agent.id) {
                 <app-agent-card [agent]="agent"></app-agent-card>
               }
             </div>
@@ -156,40 +175,97 @@ import { Property } from '../types';
     </div>
   `
 })
-export class AppComponent {
-  searchQuery = '';
-  selectedCity = 'All Cities';
-  selectedType = 'All Types';
-  priceRange: [number, number] = [0, 50000000];
+export class AppComponent implements OnInit {
+  
+  private propertyService = inject(PropertyService);
+  private agentService = inject(AgentService);
+  
+  searchQuery = signal('');
+  selectedCity = signal('All Cities');
+  selectedType = signal('All Types');
+  priceRange = signal<[number, number]>([0, 50000000]);
 
-  agents = AGENTS;
+  // agents = AGENTS;
 
-  get filteredProperties(): Property[] {
-    return PROPERTIES.filter((p) => {
-      const matchesSearch = this.searchQuery === '' || 
-        p.title.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-        p.location.toLowerCase().includes(this.searchQuery.toLowerCase());
+  private allProperties = signal<Property[]>([]);
+  agents = signal<Agent[]>([]);
+
+  // get filteredProperties(): Property[] {
+  //   return PROPERTIES.filter((p) => {
+  //     const matchesSearch = this.searchQuery === '' || 
+  //       p.title.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+  //       p.location.toLowerCase().includes(this.searchQuery.toLowerCase());
       
-      const matchesCity = this.selectedCity === 'All Cities' || p.city === this.selectedCity;
-      const matchesType = this.selectedType === 'All Types' || p.type === this.selectedType;
-      const matchesPrice = p.price <= this.priceRange[1];
+  //     const matchesCity = this.selectedCity === 'All Cities' || p.city === this.selectedCity;
+  //     const matchesType = this.selectedType === 'All Types' || p.type === this.selectedType;
+  //     const matchesPrice = p.price <= this.priceRange[1];
+
+  //     return matchesSearch && matchesCity && matchesType && matchesPrice;
+  //   });
+  // }
+
+  // get featuredProperties(): Property[] {
+  //   return PROPERTIES.filter(p => p.isFeatured);
+  // }
+  filteredProperties = computed(() => {
+    const query = this.searchQuery().toLowerCase();
+    const city = this.selectedCity();
+    const type = this.selectedType();
+    const maxPrice = this.priceRange()[1];
+
+    return this.allProperties().filter((p) => {
+      const matchesSearch = query === '' || 
+        p.title.toLowerCase().includes(query) ||
+        p.location.toLowerCase().includes(query);
+      
+      const matchesCity = city === 'All Cities' || p.city === city;
+      const matchesType = type === 'All Types' || p.type === type;
+      const matchesPrice = p.price <= maxPrice;
 
       return matchesSearch && matchesCity && matchesType && matchesPrice;
     });
-  }
+  });
 
-  get featuredProperties(): Property[] {
-    return PROPERTIES.filter(p => p.isFeatured);
+  featuredProperties = computed(() => 
+    this.allProperties().filter(p => p.isFeatured)
+  );
+
+  ngOnInit(): void {
+    // Use the object syntax to avoid deprecation and fix the typo
+    this.propertyService.getProperties().subscribe({
+      next: (data: Property[]) => {
+        this.allProperties.set(data);
+      },
+      error: (err) => console.error('Property API Error:', err)
+    });
+  
+    this.agentService.getAgents().subscribe({
+      next: (data: Agent[]) => {
+        this.agents.set(data);
+      },
+      error: (err) => console.error('Agent API Error:', err)
+    });
   }
 
   setSearchQuery(query: string) {
-    this.searchQuery = query;
+    this.searchQuery.set(query);
   }
 
   resetFilters() {
-    this.searchQuery = '';
-    this.selectedCity = 'All Cities';
-    this.selectedType = 'All Types';
-    this.priceRange = [0, 50000000];
+    this.searchQuery.set('');
+    this.selectedCity.set('All Cities');
+    this.selectedType.set('All Types');
+    this.priceRange.set([0, 50000000]);
   }
+
+  // setSearchQuery(query: string) {
+  //   this.searchQuery = query;
+  // }
+
+  // resetFilters() {
+  //   this.searchQuery = '';
+  //   this.selectedCity = 'All Cities';
+  //   this.selectedType = 'All Types';
+  //   this.priceRange = [0, 50000000];
+  // }
 }

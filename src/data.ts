@@ -86,7 +86,7 @@ export const PROPERTIES: Property[] = [
 export const AGENTS: Agent[] = [
   {
     id: 'a1',
-    name: 'Rahul Sharma',
+    name: 'Amit Paul',
     role: 'Senior Property Consultant',
     image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=400&q=80',
     rating: 4.9,
@@ -95,7 +95,7 @@ export const AGENTS: Agent[] = [
   },
   {
     id: 'a2',
-    name: 'Priya Verma',
+    name: 'Anuj Paul',
     role: 'Real Estate Advisor',
     image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80',
     rating: 4.8,
@@ -104,7 +104,7 @@ export const AGENTS: Agent[] = [
   },
   {
     id: 'a3',
-    name: 'Amit Patel',
+    name: 'Priya Verma',
     role: 'Commercial Specialist',
     image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=400&q=80',
     rating: 4.7,
