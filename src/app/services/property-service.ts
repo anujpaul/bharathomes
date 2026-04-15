@@ -9,7 +9,7 @@ import { Observable } from 'rxjs';
 export class PropertyService {
   
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:5000/api/properties';
+  private apiUrl = 'https://bharathomes-service.azurewebsites.net/api/properties';
 
   getProperties(): Observable<Property[]> {
       return this.http.get<Property[]>(this.apiUrl);

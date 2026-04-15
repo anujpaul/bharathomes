@@ -9,7 +9,7 @@ import { Observable } from 'rxjs';
 export class AgentService {
 
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:5000/api/agents';
+  private apiUrl = 'https://bharathomes-service.azurewebsites.net/api/agents';
   
   getAgents(): Observable<Agent[]>{
     return this.http.get<Agent[]>(this.apiUrl);
