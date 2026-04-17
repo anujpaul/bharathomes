@@ -1,4 +1,3 @@
-import { environment } from '@/environments/environment';
 import { Agent } from '@/types';
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
@@ -9,7 +8,7 @@ import { Observable } from 'rxjs';
 })
 export class AgentService {
 
-  private baseUrl = environment.baseUrl;
+  private baseUrl = window.__config.baseUrl;
   private http = inject(HttpClient);
   private apiUrl = `${this.baseUrl}/api/agents`;
   
