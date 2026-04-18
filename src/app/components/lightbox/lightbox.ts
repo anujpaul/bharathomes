@@ -1,6 +1,6 @@
 import { OverlayRef } from '@angular/cdk/overlay';
 import { CommonModule } from '@angular/common';
-import { Component, Input } from '@angular/core';
+import { Component, HostListener, Input } from '@angular/core';
 
 @Component({
   selector: 'app-lightbox',
@@ -40,7 +40,14 @@ export class Lightbox {
     }
   }
 
+  @HostListener('window:keydown.escape', ['$event'])
+  handleKeyboardEvent(event: any) {
+    this.close();
+  }
+
   public close(): void {
-    this.overlayRef.dispose();
+    if (this.overlayRef) {
+      this.overlayRef.dispose();
+    }
   }
 }
