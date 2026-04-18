@@ -20,6 +20,11 @@ steps:
     npm run build
   displayName: 'npm install and build'
 
+- script: |
+    echo "Listing contents of dist directory:"
+    ls -R dist
+  displayName: 'Debug: List build output'
+
 - task: ArchiveFiles@2
   inputs:
     rootFolderOrFile: '$(System.DefaultWorkingDirectory)/dist/bharat-homes'
