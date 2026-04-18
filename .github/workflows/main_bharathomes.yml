@@ -46,6 +46,15 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: node-app
+
+      - name: Replace config.js for Production
+        run: |
+          cat > assets/config.js <<EOF
+          window.__config = {
+            baseUrl: "https://bharathomes-service.azurewebsites.net",
+            blobBaseUrl: "https://bharathomes.blob.core.windows.net/production"
+          };
+          EOF
       
       - name: Login to Azure
         uses: azure/login@v2
