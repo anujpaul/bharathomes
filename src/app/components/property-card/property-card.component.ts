@@ -1,21 +1,25 @@
-import { Component, Input } from '@angular/core';
+import { CUSTOM_ELEMENTS_SCHEMA, Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LucideAngularModule, Bed, Bath, Square, MapPin, Star } from 'lucide-angular';
 import { Property } from '../../../types';
+import { LightboxService } from '../../services/lightbox-service';
 
 @Component({
   selector: 'app-property-card',
   standalone: true,
   imports: [CommonModule, LucideAngularModule],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   template: `
     <div class="group bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300">
       <div class="relative aspect-[4/3] overflow-hidden">
-        <img
-          [src]="property.image"
-          [alt]="property.title"
-          class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-          referrerPolicy="no-referrer"
-        />
+
+        <swiper-container [loop]="true" [pagination]="true" [navigation]="true">
+          @for (img of property.image; track img; let i = $index) {
+            <swiper-slide>
+              <img [src]="img" class="w-full h-full object-cover cursor-pointer" (click)="openLightbox(i)" />
+            </swiper-slide>
+          }
+        </swiper-container>
         <div class="absolute top-4 left-4 flex gap-2">
           @if (property.isFeatured) {
             <span class="bg-blue-600 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full flex items-center gap-1 shadow-lg">
@@ -88,12 +92,22 @@ import { Property } from '../../../types';
 })
 export class PropertyCardComponent {
   @Input() property!: Property;
+  
+  constructor(private lightbox: LightboxService) {}
 
   StarIcon = Star;
   MapPinIcon = MapPin;
   BedIcon = Bed;
   BathIcon = Bath;
   SquareIcon = Square;
+
+  ngOnInit() {
+  console.log("Images array length:", this.property.image.length);
+}
+  
+  openLightbox(index: number) {
+    this.lightbox.open(this.property.image, index);
+  }
 
   formatCurrency(amount: number): string {
     return new Intl.NumberFormat('en-IN', {

@@ -1,1 +1,11 @@
 @import "tailwindcss";
+swiper-container {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Ensure the lightbox overlay has a high z-index */
+.cdk-overlay-pane {
+  z-index: 1000;
+}

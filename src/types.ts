@@ -8,7 +8,7 @@ export interface Property {
   baths: number;
   sqft: number;
   type: 'Apartment' | 'Villa' | 'Plot' | 'Commercial';
-  image: string;
+  image: string[];
   isFeatured?: boolean;
   expresswayProximity?: boolean;
 }
