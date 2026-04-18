@@ -33,5 +33,5 @@ steps:
     azureSubscription: 'Azure_Connection'
     appType: 'webAppLinux'
     appName: 'bharathomes'
-    package: '$(System.DefaultWorkingDirectory)/**/*.zip'
+    package: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
     runtimeStack: 'NODE|22-lts'
