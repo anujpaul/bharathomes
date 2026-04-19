@@ -1,30 +1,38 @@
 import { OverlayRef } from '@angular/cdk/overlay';
 import { CommonModule } from '@angular/common';
-import { Component, HostListener, Input } from '@angular/core';
+import { Component, HostListener, Input, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 
 @Component({
   selector: 'app-lightbox',
   standalone: true,
   imports: [CommonModule],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   template: `
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4">
-    <button (click)="close()" class="absolute top-4 right-4 text-white text-xl z-10">Close</button>
-    
-    <button (click)="prev()" class="absolute left-4 text-white text-4xl">❮</button>
-    
-    <img [src]="image[currentIndex]" class="max-w-full max-h-[80vh] object-contain transition-all" />
-    
-    <button (click)="next()" class="absolute right-4 text-white text-4xl">❯</button>
-  </div>
+    <div class="lightbox-content">
+      <button class="close-btn" (click)="close()">X</button>
+      
+      <swiper-container [loop]="true" [navigation]="true" [initialSlide]="currentIndex">
+        @for (img of image; track img) {
+          <swiper-slide>
+            <img [src]="img" class="lightbox-img">
+          </swiper-slide>
+        }
+      </swiper-container>
+    </div>
   `,
-  styles: ``,
+  styles: [`
+    .lightbox-content { position: relative; width: 90vw; height: 80vh; }
+    .lightbox-img { width: 100%; height: 100%; object-fit: contain; }
+    .close-btn { position: absolute; top: 10px; right: 10px; z-index: 10; cursor: pointer; color: white; background: none; border: none; font-size: 20px;}
+    swiper-container { width: 100%; height: 100%; }
+  `]
 })
 export class Lightbox {
   @Input() image: string[] = [];
   @Input() currentIndex: number = 0;
-  public overlayRef!: OverlayRef;
+  @Input() overlayRef!: OverlayRef;
 
-  public next(): void {
+  next() {
     if (this.currentIndex < this.image.length - 1) {
       this.currentIndex++;
     } else {
@@ -32,11 +40,11 @@ export class Lightbox {
     }
   }
 
-  public prev(): void {
+  prev() {
     if (this.currentIndex > 0) {
       this.currentIndex--;
     } else {
-      this.currentIndex = this.image.length - 1; // Loop to end
+      this.currentIndex = this.image.length - 1; // Loop back to end
     }
   }
 
