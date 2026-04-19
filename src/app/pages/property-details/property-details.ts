@@ -19,7 +19,8 @@ import { Property } from '@/types';
           }
         </div>
       </div>
-    }
+      }
+  }
   `,
   styles: ``,
 })
