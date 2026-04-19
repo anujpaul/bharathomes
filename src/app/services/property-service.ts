@@ -18,4 +18,10 @@ export class PropertyService {
       console.log(`Base URL : ${this.baseUrl}`);
       return this.http.get<Property[]>(this.apiUrl);
     }
+
+  getPropertyById(id: string): Observable<Property> {
+      console.log(`Base URL : ${this.baseUrl}`);
+      return this.http.get<Property>(`${this.apiUrl}\${id}`);
+    }
+  
 }
