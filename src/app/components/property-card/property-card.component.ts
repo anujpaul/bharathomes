@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { LucideAngularModule, Bed, Bath, Square, MapPin, Star } from 'lucide-angular';
 import { Property } from '../../../types';
 import { LightboxService } from '../../services/lightbox-service';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-property-card',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule],
+  imports: [CommonModule, LucideAngularModule, RouterLink],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   template: `
     <div class="group bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300">
@@ -82,9 +83,10 @@ import { LightboxService } from '../../services/lightbox-service';
           <div class="text-2xl font-black text-gray-900">
             {{formatCurrency(property.price)}}
           </div>
-          <button class="bg-gray-900 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-blue-600 transition-colors">
+          <a [routerLink]="['/property', property.id]"
+            class="bg-gray-900 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-blue-600 transition-colors">
             Details
-          </button>
+          </a>
         </div>
       </div>
     </div>

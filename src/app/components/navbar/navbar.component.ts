@@ -12,10 +12,14 @@ import { LucideAngularModule, Home, Search, User, Menu } from 'lucide-angular';
         <div class="flex justify-between items-center h-16">
           <div class="flex items-center gap-2">
             <div class="bg-blue-600 p-2 rounded-lg">
+              <a href="#" >
               <lucide-icon [name]="HomeIcon" class="w-6 h-6 text-white"></lucide-icon>
+              </a>
             </div>
             <span class="text-xl font-bold tracking-tight text-gray-900">
+            <a href="#" >
               Bharat<span class="text-blue-600">Homes</span>
+             </a> 
               <span class="ml-1 text-xs font-medium text-gray-400 uppercase tracking-widest">UP</span>
             </span>
           </div>
