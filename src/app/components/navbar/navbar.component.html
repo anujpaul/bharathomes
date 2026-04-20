@@ -27,6 +27,7 @@
         </button>
 
         @if (authService.user()) {
+          <pre>{{ authService.user() | json }}</pre>
           <div class="flex items-center gap-3">
             <span class="text-sm font-medium text-gray-700">
               {{ authService.user().user_claims[1].val }}
