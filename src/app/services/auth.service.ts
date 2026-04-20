@@ -19,6 +19,17 @@ export class AuthService {
     return nameClaim ? nameClaim.val : 'User';
   }
 
+  get uniqueUserId(): string | null {
+  const user = this.user();
+  if (!user || !user.user_claims) return null;
+  
+  // Find the claim specifically where the type is nameidentifier
+  const idClaim = user.user_claims.find((c: any) => 
+    c.typ === 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'
+  );
+  return idClaim ? idClaim.val : null;
+}
+
   constructor() {
     this.checkSession();
   }
