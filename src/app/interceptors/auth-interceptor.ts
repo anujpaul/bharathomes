@@ -4,19 +4,25 @@ import { AuthService } from '../services/auth.service';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
-  const userId = authService.uniqueUserId; // The method we defined earlier
+  const userId = authService.uniqueUserId;
 
+  console.log("Interceptor: Request being intercepted for URL:", req.url);
+
+  // Define headers object
+  const headers: { [name: string]: string } = {
+    'X-Users-Id': 'Inter' // Your test header
+  };
 
   if (userId) {
-    console.log(`Interceptor called ${userId}`);
-    // Clone the request and add the custom header to every request
-    const authReq = req.clone({
-      setHeaders: { 'X-User-Id': userId }
-      
-    });
-    return next(authReq);
+    console.log("Interceptor: Found User ID, adding X-User-Id:", userId);
+    headers['X-User-Id'] = userId;
   }
 
-  // If no user is logged in, pass the request as-is
-  return next(req);
+  // Clone ONCE with all headers
+  const authReq = req.clone({
+    setHeaders: headers,
+    withCredentials: true
+  });
+
+  return next(authReq);
 };

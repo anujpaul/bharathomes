@@ -1,18 +1,10 @@
 import { bootstrapApplication } from '@angular/platform-browser';
 import { AppComponent } from './app/app.component';
-import { provideZonelessChangeDetection } from '@angular/core';
-import { provideHttpClient } from '@angular/common/http';
 import { register } from 'swiper/element/bundle';
-import { provideRouter } from '@angular/router';
-import { routes } from './app/app.routes';
+import { appConfig } from './app/app.config';
 
 register();
 console.log('Bootstrapping BharatHomes ...');
-bootstrapApplication(AppComponent, {
-  providers: [
-    provideZonelessChangeDetection(),
-    provideHttpClient(),
-    provideRouter(routes)
-  ]
-}).then(() => console.log('App bootstrapped successfully!'))
-  .catch(err => console.error('Bootstrap error:', err));
+bootstrapApplication(AppComponent, appConfig)
+          .then(() => console.log('App bootstrapped successfully!'))
+          .catch(err => console.error('Bootstrap error:', err));
