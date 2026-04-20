@@ -1,6 +1,6 @@
 import { OverlayRef } from '@angular/cdk/overlay';
 import { CommonModule } from '@angular/common';
-import { Component, HostListener, Input, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { Component, HostListener, Input, CUSTOM_ELEMENTS_SCHEMA, ViewChild, AfterViewInit, ElementRef, ChangeDetectorRef } from '@angular/core';
 
 @Component({
   selector: 'app-lightbox',
@@ -8,16 +8,21 @@ import { Component, HostListener, Input, CUSTOM_ELEMENTS_SCHEMA } from '@angular
   imports: [CommonModule],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   template: `
-    <div class="lightbox-content">
+    <div class="lightbox-content" [style.opacity]="isReady ? 1 : 0">
+    @if (!isReady) {
+    <div class="loader">Loading...</div>
+  }
       <button class="close-btn" (click)="close()">X</button>
       
-      <swiper-container [loop]="true" [navigation]="true" [initialSlide]="currentIndex">
+      <swiper-container #swiperContainer 
+        [loop]="true" 
+        [navigation]="true">
         @for (img of image; track img) {
           <swiper-slide>
             <img [src]="img" class="lightbox-img">
           </swiper-slide>
         }
-      </swiper-container>
+      </swiper-container>     
     </div>
   `,
   styles: [`
@@ -27,25 +32,32 @@ import { Component, HostListener, Input, CUSTOM_ELEMENTS_SCHEMA } from '@angular
     swiper-container { width: 100%; height: 100%; }
   `]
 })
-export class Lightbox {
+export class Lightbox implements AfterViewInit {
   @Input() image: string[] = [];
   @Input() currentIndex: number = 0;
   @Input() overlayRef!: OverlayRef;
 
-  next() {
-    if (this.currentIndex < this.image.length - 1) {
-      this.currentIndex++;
-    } else {
-      this.currentIndex = 0; // Loop back to start
-    }
-  }
+  isReady = false;
+  // 1. Reference the container
+  @ViewChild('swiperContainer') swiperContainer!: ElementRef;
 
-  prev() {
-    if (this.currentIndex > 0) {
-      this.currentIndex--;
-    } else {
-      this.currentIndex = this.image.length - 1; // Loop back to end
-    }
+  constructor(private cdr: ChangeDetectorRef) {}
+
+  ngAfterViewInit() {
+    // 2. Wait for the browser to render the web component
+    setTimeout(() => {
+      const swiperEl = this.swiperContainer.nativeElement;
+      
+      // 3. Force the slide to the index
+      if (swiperEl && swiperEl.swiper) {
+        swiperEl.swiper.slideTo(this.currentIndex, 0);
+      } else {
+        // Fallback for some environments
+        swiperEl.initialSlide = this.currentIndex;
+      }
+      this.isReady = true;
+      this.cdr.detectChanges();
+    }, 100); 
   }
 
   @HostListener('window:keydown.escape', ['$event'])

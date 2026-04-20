@@ -15,17 +15,24 @@ import { LightboxService } from '@/app/services/lightbox-service';
     @if (property$ | async; as property) {
     <div class="page-container">
       <div class="gallery-container">
-        <div class="hero-image">
-          <img [src]="property.image[0]" (click)="openLightbox(property, 0)" alt="Main View">
+    <div class="hero-image">
+      <img [src]="property.image[0]" (click)="openLightbox(property, 0)" alt="Main">
+    </div>
+
+    <div class="thumbnail-grid">
+      @for (img of property.image.slice(1, 5); track img; let i = $index) {
+        <div class="thumbnail-wrapper">
+          <img [src]="img" (click)="openLightbox(property, i + 1)" alt="Thumb">
+          
+          @if (i === 3 && property.image.length > 5) {
+            <div class="more-overlay" (click)="openLightbox(property, 5); $event.stopPropagation()">
+              <span>+{{ property.image.length - 5}}</span>
+            </div>
+          }
         </div>
-        @if (property.image.length > 1) {
-          <div class="thumbnail-grid">
-            @for (img of property.image.slice(1); track img; let i = $index) {
-              <img [src]="img" (click)="openLightbox(property, i + 1)" alt="Thumbnail">
-            }
-          </div>
-        }
-      </div>
+      }
+    </div>
+  </div>
 
       <div class="property-info-section">
         <h1>{{ property.title }}</h1>
@@ -45,11 +52,28 @@ import { LightboxService } from '@/app/services/lightbox-service';
     .page-container { max-width: 1000px; margin: 0 auto; padding: 20px; }
     
     /* Gallery stays on top */
-    .gallery-container { display: flex; gap: 15px; margin-bottom: 30px; }
-    .hero-image { flex: 2; }
-    .hero-image img { width: 100%; height: 400px; object-fit: cover; border-radius: 8px; cursor: pointer; }
-    .thumbnail-grid { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .thumbnail-grid img { width: 100%; height: 195px; object-fit: cover; border-radius: 8px; cursor: pointer; }
+    .gallery-container { display: flex; gap: 15px; max-width: 1000px; margin: 0 auto; }
+  .hero-image { flex: 2; }
+  .hero-image img { width: 100%; height: 400px; object-fit: cover; border-radius: 8px; cursor: pointer; }
+
+  .thumbnail-grid { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  
+  .thumbnail-wrapper { position: relative; cursor: pointer; }
+  .thumbnail-wrapper img { width: 100%; height: 195px; object-fit: cover; border-radius: 8px; }
+
+  /* "+More" Styling */
+  .more-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    border-radius: 8px;
+  }
 
     /* Info Section at Bottom */
     .property-info-section { border-top: 1px solid #eee; padding-top: 20px; }
