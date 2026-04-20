@@ -7,6 +7,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const userId = authService.uniqueUserId;
 
   console.log("Interceptor: Request being intercepted for URL:", req.url);
+  console.log("UserId:", userId);
 
   // Define headers object
   const headers: { [name: string]: string } = {
