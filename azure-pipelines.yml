@@ -10,23 +10,23 @@ pool:
   vmImage: ubuntu-latest
 
 steps:
-- task: NodeTool@0
-  inputs:
-    versionSpec: '20.x'
-  displayName: 'Install Node.js'
+# - task: NodeTool@0
+#   inputs:
+#     versionSpec: '20.x'
+#   displayName: 'Install Node.js'
 
 - script: |
     npm install
     npm run build
   displayName: 'npm install and build'
 
-- script: |
-    CONFIG_FILE="$(System.DefaultWorkingDirectory)/dist/applet/assets/config.js"
-    echo "Replacing configuration in $CONFIG_FILE"
-    # Use sed to replace the localhost string with the production URL
-    sed -i 's|http://localhost:5000|https://bharathomes-service.azurewebsites.net|g' $CONFIG_FILE
-    echo "Replacement complete."
-  displayName: 'Replace config.js values'
+# - script: |
+#     CONFIG_FILE="$(System.DefaultWorkingDirectory)/dist/applet/assets/config.js"
+#     echo "Replacing configuration in $CONFIG_FILE"
+#     # Use sed to replace the localhost string with the production URL
+#     sed -i 's|http://localhost:5000|https://bharathomes-service.azurewebsites.net|g' $CONFIG_FILE
+#     echo "Replacement complete."
+#   displayName: 'Replace config.js values'
 
 - task: ArchiveFiles@2
   inputs:
