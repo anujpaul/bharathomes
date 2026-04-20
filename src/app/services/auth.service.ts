@@ -36,23 +36,23 @@ export class AuthService {
 
   async checkSession() {
 
-    if (window.location.hostname === 'localhost') {
-    // Inject a dummy user so your application thinks you are logged in
-    this.user.set({
-          user_claims: [
-            { 
-              typ: 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier', 
-              val: '112577913013492532420' 
-            },
-            {
-                "typ": "name",
-                "val": "Anuj Local"
-            }
-          ]
-        });
-        console.log("Local Dev: Mock user set.");
-        return;
-      }
+    // if (window.location.hostname === 'localhost') {
+    // // Inject a dummy user so your application thinks you are logged in
+    // this.user.set({
+    //       user_claims: [
+    //         { 
+    //           typ: 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier', 
+    //           val: '112577913013492532420' 
+    //         },
+    //         {
+    //             "typ": "name",
+    //             "val": "Anuj Local"
+    //         }
+    //       ]
+    //     });
+    //     console.log("Local Dev: Mock user set.");
+    //     return;
+    //   }
 
     // Azure provides the user profile at this endpoint
     this.http.get<any[]>('/.auth/me').subscribe({
