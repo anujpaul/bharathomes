@@ -28,7 +28,7 @@ export class AuthService {
     this.http.get<any[]>('/.auth/me').subscribe({
       next: (data) => {
         if (data && data.length > 0) {
-          console.log(`Data is ${data}`)
+          console.log('Data is ' + JSON.stringify(data, null, 2));
           this.user.set(data[0]);
           this.fetchUserProfile();
         }
@@ -42,7 +42,7 @@ export class AuthService {
     this.http.get<any>('/api/user/profile').subscribe({
       next: (profile) => {
 
-        console.log(`Profile is ${profile}`)
+        console.log('Profile is ' + JSON.stringify(profile, null, 2));
         // Store this in a separate signal, e.g., 'userProfile'
         // This might contain: savedProperties, preferences, etc.
 
