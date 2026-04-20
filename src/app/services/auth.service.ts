@@ -28,11 +28,26 @@ export class AuthService {
     this.http.get<any[]>('/.auth/me').subscribe({
       next: (data) => {
         if (data && data.length > 0) {
-          console.log(`Data is `)
+          console.log(`Data is ${data}`)
           this.user.set(data[0]);
+          this.fetchUserProfile();
         }
       },
       error: () => this.user.set(null)
+    });
+
+    
+  }
+  fetchUserProfile() {
+    this.http.get<any>('/api/user/profile').subscribe({
+      next: (profile) => {
+
+        console.log(`Profile is ${profile}`)
+        // Store this in a separate signal, e.g., 'userProfile'
+        // This might contain: savedProperties, preferences, etc.
+
+
+      }
     });
   }
 }
