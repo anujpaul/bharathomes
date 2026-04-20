@@ -14,6 +14,6 @@ export class AgentService {
   private apiUrl = `${this.baseUrl}/api/agents`;
   
   getAgents(): Observable<Agent[]>{
-    return this.http.get<Agent[]>(this.apiUrl);
+    return this.http.get<Agent[]>(this.apiUrl, { withCredentials: true });
   }
 }

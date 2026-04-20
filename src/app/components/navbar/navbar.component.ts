@@ -18,6 +18,6 @@ export class NavbarComponent {
 
   authService = inject(AuthService);
 
-  loginUrl = '/.auth/login/google?post_login_redirect_uri=/';
-  logoutUrl = '/.auth/logout?post_login_redirect_uri=/';
+  // loginUrl = '/.auth/login/google?post_login_redirect_uri=/';
+  // logoutUrl = '/.auth/logout?post_login_redirect_uri=/';
 }
