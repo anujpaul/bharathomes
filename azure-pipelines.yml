@@ -36,10 +36,20 @@ steps:
     archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
     replaceExistingArchive: true
 
-- task: AzureWebApp@1
+# - task: AzureWebApp@1
+#   inputs:
+#     azureSubscription: 'Azure_Connection'
+#     appType: 'webAppLinux'
+#     appName: 'bharathomes'
+#     package: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+#     runtimeStack: 'NODE|22-lts'
+
+- task: AzureRmWebAppDeployment@5
   inputs:
-    azureSubscription: 'Azure_Connection'
+    ConnectionType: 'AzureRM'
+    azureSubscription: 'Azure Subscription(d7390d9e-0635-43f5-8460-c268e7d9a219)'
     appType: 'webAppLinux'
-    appName: 'bharathomes'
-    package: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
-    runtimeStack: 'NODE|22-lts'
+    WebAppName: 'bharathomes'
+    packageForLinux: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+    RuntimeStack: 'NODE|22-lts'
+    DeploymentTypeLinux: 'oneDeploy'
