@@ -6,10 +6,13 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const userId = authService.uniqueUserId; // The method we defined earlier
 
+
   if (userId) {
+    console.log(`Interceptor called ${userId}`);
     // Clone the request and add the custom header to every request
     const authReq = req.clone({
       setHeaders: { 'X-User-Id': userId }
+      
     });
     return next(authReq);
   }
