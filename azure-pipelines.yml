@@ -36,8 +36,6 @@ steps:
     archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
     replaceExistingArchive: true
 
-
-
 - task: AzureWebApp@1
   inputs:
     azureSubscription: 'Azure_Connection'
