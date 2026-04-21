@@ -4,6 +4,7 @@ import { register } from 'swiper/element/bundle';
 import { appConfig } from './app/app.config';
 
 register();
+
 console.log('Bootstrapping BharatHomes ...');
 bootstrapApplication(AppComponent, appConfig)
           .then(() => console.log('App bootstrapped successfully!'))

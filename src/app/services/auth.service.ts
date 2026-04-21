@@ -13,6 +13,8 @@ export class AuthService {
   user = signal<any | null>(null);
 
   get userName(): string {
+
+    console.log("UserName called in AuthService");
     const userData = this.user();
     // Safely check if user_claims exists
     if (!userData || !userData.user_claims) return 'User';
