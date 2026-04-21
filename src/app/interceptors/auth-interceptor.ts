@@ -15,7 +15,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   console.log("Interceptor: Request being intercepted for URL:", req.url);
   console.log("UserId:", userId);
-  console.log(`${timestamp}`)
+  console.log(`${new Date().toLocaleTimeString()}`);
   console.log("User Name:", authService.userName);
 
   // Define headers object

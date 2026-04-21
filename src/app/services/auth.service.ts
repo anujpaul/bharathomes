@@ -36,9 +36,9 @@ export class AuthService {
 }
 
   constructor() {
-    console.log(`Calling google api ${timestamp}`);
+    console.log(`Calling google api ${new Date().toLocaleTimeString()}`);
     this.checkSession();
-    console.log(`Called google API ${timestamp}`);
+    console.log(`Called google API ${new Date().toLocaleTimeString()}`);
   }
 
   async checkSession() {
