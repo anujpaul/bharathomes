@@ -1,10 +1,13 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
+  private userReady$ = new BehaviorSubject<any | null>(null);
+
   private http = inject(HttpClient);
   // Reactive signal to store user info
   user = signal<any | null>(null);
@@ -58,9 +61,14 @@ export class AuthService {
     this.http.get<any[]>('/.auth/me').subscribe({
       next: (data) => {
         if (data && data.length > 0) {
-          console.log('Data is ' + JSON.stringify(data, null, 2));
+          // console.log('Data is ' + JSON.stringify(data, null, 2));
           this.user.set(data[0]);
+          this.userReady$.next(data[0]);
           // this.fetchUserProfile();
+        }
+        else {
+          console.log("AuthService: User is NOT logged in (/.auth/me returned empty)");
+          this.user.set(null);
         }
       },
       error: () => this.user.set(null)
