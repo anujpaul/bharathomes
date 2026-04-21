@@ -15,6 +15,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   console.log("Interceptor: Request being intercepted for URL:", req.url);
   console.log("UserId:", userId);
 
+  console.log("User Name:", authService.user);
+
   // Define headers object
   const headers: { [name: string]: string } = {
     'X-Users-Id': 'Inter' // Your test header
