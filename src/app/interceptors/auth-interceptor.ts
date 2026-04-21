@@ -9,23 +9,26 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     return next(req)
   }
     
-  
+
   const authService = inject(AuthService);
   const userId = authService.uniqueUserId;
-
-  console.log("Interceptor: Request being intercepted for URL:", req.url);
-  console.log("UserId:", userId);
-  console.log(`${new Date().toLocaleTimeString()}`);
-  console.log("User Name:", authService.userName);
+  const userName = authService.userName;
+  const userEmail = authService.userEmail;
+  // console.log("Interceptor: Request being intercepted for URL:", req.url);
+  // console.log("UserId:", userId);
+  // console.log(`${new Date().toLocaleTimeString()}`);
+  // console.log("User Name:", authService.userName);
 
   // Define headers object
   const headers: { [name: string]: string } = {
-    'X-Users-Id': 'Inter' // Your test header
+    // 'X-Users-Id': 'Inter' // Your test header
   };
 
   if (userId) {
     console.log("Interceptor: Found User ID, adding X-User-Id:", userId);
     headers['X-User-Id'] = userId;
+    headers['X-User-Name'] = userName;
+    headers['X-User-Email'] = userEmail;
   }
 
   // Clone ONCE with all headers

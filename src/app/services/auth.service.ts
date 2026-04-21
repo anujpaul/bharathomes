@@ -35,9 +35,21 @@ export class AuthService {
   return idClaim ? idClaim.val : null;
 }
 
+get userEmail(): string {
+  const user = this.user();
+  if (!user || !user.user_claims) return null;
+
+  // Find the claim with the specific email address type
+  const emailClaim = user.user_claims.find((c: any) => 
+    c.typ === 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'
+  );
+
+  return emailClaim ? emailClaim.val : 'No Email';
+}
+
   constructor() {
     console.log(`Calling google api ${new Date().toLocaleTimeString()}`);
-    this.checkSession();
+    // this.checkSession();
     console.log(`Called google API ${new Date().toLocaleTimeString()}`);
   }
 
