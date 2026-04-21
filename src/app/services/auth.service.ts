@@ -1,6 +1,6 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, filter, take } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -78,6 +78,20 @@ export class AuthService {
 
     
   }
+
+  waitForUser() {
+    return this.userReady$.asObservable().pipe(
+      filter(user => user !== null),
+      take(1)
+    );
+  }
+
+
+
+
+
+
+
   fetchUserProfile() {
     this.http.get<any>('/api/user/profile').subscribe({
       next: (profile) => {
