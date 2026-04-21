@@ -22,3 +22,11 @@ export interface Agent {
   listingsCount: number;
   specialization: string;
 }
+
+export interface UserProfile{
+
+  id: string;
+  name: string;
+  email: string;
+
+}

@@ -1,12 +1,17 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, catchError, filter, firstValueFrom, of, take, tap, timestamp } from 'rxjs';
+import { BehaviorSubject, catchError, filter, firstValueFrom, Observable, of, take, tap, timestamp } from 'rxjs';
+import { appConfig } from '../config/app-config';
+import { UserProfile } from '@/types';
+
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
+
   private userReady$ = new BehaviorSubject<any | null>(null);
+  // userProfile$!: Observable<UserProfile>;
 
   private http = inject(HttpClient);
   // Reactive signal to store user info
@@ -99,6 +104,7 @@ get userEmail(): string {
       if (data && data.length > 0) {
         this.user.set(data[0]);
         this.userReady$.next(data[0]);
+        this.fetchUserProfile();
       } else {
         this.user.set(null);
       }
@@ -125,13 +131,15 @@ get userEmail(): string {
 
 
   fetchUserProfile() {
-    this.http.get<any>('/api/user/profile').subscribe({
+
+    
+    this.http.get<any>(`${appConfig.baseUrl}/api/userProfile`).subscribe({
       next: (profile) => {
 
         console.log('Profile is ' + JSON.stringify(profile, null, 2));
         // Store this in a separate signal, e.g., 'userProfile'
         // This might contain: savedProperties, preferences, etc.
-
+        
 
       }
     });
