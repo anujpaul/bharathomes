@@ -4,7 +4,7 @@ import { AuthService } from '../services/auth.service';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
-  if (req.url.includes('./auth')){
+  if (req.url.includes('/.auth/')){
     return next(req)
   }
     
