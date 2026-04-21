@@ -1,6 +1,6 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, filter, take } from 'rxjs';
+import { BehaviorSubject, filter, take, timestamp } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -36,7 +36,9 @@ export class AuthService {
 }
 
   constructor() {
+    console.log(`Calling google api ${timestamp}`);
     this.checkSession();
+    console.log(`Called google API ${timestamp}`);
   }
 
   async checkSession() {

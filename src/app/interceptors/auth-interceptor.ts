@@ -1,6 +1,7 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { AuthService } from '../services/auth.service';
+import { timestamp } from 'rxjs';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
@@ -14,7 +15,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   console.log("Interceptor: Request being intercepted for URL:", req.url);
   console.log("UserId:", userId);
-
+  console.log(`${timestamp}`)
   console.log("User Name:", authService.userName);
 
   // Define headers object
