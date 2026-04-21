@@ -37,7 +37,7 @@ export class AuthService {
 
 get userEmail(): string {
   const user = this.user();
-  if (!user || !user.user_claims) return null;
+  if (!user || !user.user_claims) return 'No Email';
 
   // Find the claim with the specific email address type
   const emailClaim = user.user_claims.find((c: any) => 
