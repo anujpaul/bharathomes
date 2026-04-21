@@ -9,7 +9,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     return next(req)
   }
     
-
+  
   const authService = inject(AuthService);
   const userId = authService.uniqueUserId;
 

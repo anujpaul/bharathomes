@@ -1,6 +1,6 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, filter, take, timestamp } from 'rxjs';
+import { BehaviorSubject, catchError, filter, firstValueFrom, of, take, tap, timestamp } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -41,45 +41,63 @@ export class AuthService {
     console.log(`Called google API ${new Date().toLocaleTimeString()}`);
   }
 
-  async checkSession() {
+  // async checkSession() {
 
-    // if (window.location.hostname === 'localhost') {
-    // // Inject a dummy user so your application thinks you are logged in
-    // this.user.set({
-    //       user_claims: [
-    //         { 
-    //           typ: 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier', 
-    //           val: '112577913013492532420' 
-    //         },
-    //         {
-    //             "typ": "name",
-    //             "val": "Anuj Local"
-    //         }
-    //       ]
-    //     });
-    //     console.log("Local Dev: Mock user set.");
-    //     return;
-    //   }
+  //   // if (window.location.hostname === 'localhost') {
+  //   // // Inject a dummy user so your application thinks you are logged in
+  //   // this.user.set({
+  //   //       user_claims: [
+  //   //         { 
+  //   //           typ: 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier', 
+  //   //           val: '112577913013492532420' 
+  //   //         },
+  //   //         {
+  //   //             "typ": "name",
+  //   //             "val": "Anuj Local"
+  //   //         }
+  //   //       ]
+  //   //     });
+  //   //     console.log("Local Dev: Mock user set.");
+  //   //     return;
+  //   //   }
 
-    // Azure provides the user profile at this endpoint
-    this.http.get<any[]>('/.auth/me').subscribe({
-      next: (data) => {
-        if (data && data.length > 0) {
-          // console.log('Data is ' + JSON.stringify(data, null, 2));
-          this.user.set(data[0]);
-          this.userReady$.next(data[0]);
-          // this.fetchUserProfile();
-        }
-        else {
-          console.log("AuthService: User is NOT logged in (/.auth/me returned empty)");
-          this.user.set(null);
-        }
-      },
-      error: () => this.user.set(null)
-    });
+  //   // Azure provides the user profile at this endpoint
+  //   this.http.get<any[]>('/.auth/me').subscribe({
+  //     next: (data) => {
+  //       if (data && data.length > 0) {
+  //         // console.log('Data is ' + JSON.stringify(data, null, 2));
+  //         this.user.set(data[0]);
+  //         this.userReady$.next(data[0]);
+  //         // this.fetchUserProfile();
+  //       }
+  //       else {
+  //         console.log("AuthService: User is NOT logged in (/.auth/me returned empty)");
+  //         this.user.set(null);
+  //       }
+  //     },
+  //     error: () => this.user.set(null)
+  //   });
 
     
-  }
+  // }
+
+  async checkSession(): Promise<any> {
+  return firstValueFrom(this.http.get<any[]>('/.auth/me').pipe(
+    tap(data => {
+      if (data && data.length > 0) {
+        this.user.set(data[0]);
+        this.userReady$.next(data[0]);
+      } else {
+        this.user.set(null);
+      }
+    }),
+    catchError((err) => {
+      console.error("AuthService: Session check failed", err);
+      this.user.set(null);
+      return of(null);
+    })
+  ));
+}
 
   waitForUser() {
     return this.userReady$.asObservable().pipe(
