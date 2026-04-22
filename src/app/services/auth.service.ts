@@ -90,11 +90,11 @@ get userEmail(): string {
   fetchUserProfile(data: any[]) {
 
     const token = sessionStorage.getItem('id_token');
-    const headers: Record<string, string> = token 
-    ? { 'X-ID-Token': token } 
-    : {};
+    // const headers: Record<string, string> = token 
+    // ? { 'X-ID-Token': token } 
+    // : {};
 
-    this.http.post<any>(`${appConfig.baseUrl}/api/userProfile`,{}, { headers }).subscribe({
+    this.http.post<any>(`${appConfig.baseUrl}/api/userProfile`,{}, { headers: { 'Authorization': `Bearer ${token}` } }).subscribe({
       next: (profile) => {
 
         console.log('Profile is ' + JSON.stringify(profile, null, 2));
