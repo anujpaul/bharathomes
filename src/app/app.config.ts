@@ -16,11 +16,11 @@ export const appConfig :ApplicationConfig = {
         provideRouter(routes),
         provideHttpClient(withInterceptors([authInterceptor])),
         // provideHttpClient(),
-        // {
-            // provide: APP_INITIALIZER,
-            // useFactory: initializeApp,
-            // deps: [AuthService],
-            // multi: true
-        // }
+        {
+            provide: APP_INITIALIZER,
+            useFactory: initializeApp,
+            deps: [AuthService],
+            multi: true
+        }
     ]
 }
