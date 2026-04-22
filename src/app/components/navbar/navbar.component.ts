@@ -15,8 +15,13 @@ export class NavbarComponent {
   SearchIcon = Search;
   UserIcon = User;
   MenuIcon = Menu;
+  isMenuOpen = false;
 
   authService = inject(AuthService);
+
+  toggleMenu() {
+    this.isMenuOpen = !this.isMenuOpen;
+  }
 
   loginUrl = '/.auth/login/google?post_login_redirect_uri=/';
   logoutUrl = '/.auth/logout?post_login_redirect_uri=/';

@@ -51,22 +51,14 @@
         <button (click)="toggleMenu()" class="p-2 text-gray-600 md:hidden">
           <lucide-icon [name]="MenuIcon" class="w-6 h-6"></lucide-icon>
         </button>
-        </div> </div> </div> @if (isMenuOpen) {
-        <div class="md:hidden bg-white border-b border-gray-100">
-          <div class="px-4 pt-2 pb-4 space-y-1">
-            <a href="#" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600">Buy</a>
-            <a href="#" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600">Rent</a>
-            <a href="#" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600">Sell</a>
-            <a href="#" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600">Agents</a>
-          </div>
-        </div>  
-
-
+      </div> </div> </div> @if (isMenuOpen) {
+    <div class="md:hidden bg-white border-b border-gray-100">
+      <div class="px-4 pt-2 pb-4 space-y-1">
+        <a href="#" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600">Buy</a>
+        <a href="#" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600">Rent</a>
+        <a href="#" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600">Sell</a>
+        <a href="#" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600">Agents</a>
       </div>
-
-
-
-
     </div>
-  </div>
+  }
 </nav>
