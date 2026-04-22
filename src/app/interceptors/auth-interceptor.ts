@@ -5,37 +5,42 @@ import { timestamp } from 'rxjs';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
-  if (req.url.includes('/.auth/')){
-    return next(req)
-  }
-    
+    if (req.url.includes('/.auth/')){
+      return next(req)
+    }
+      
 
-  const authService = inject(AuthService);
-  const userId = authService.uniqueUserId;
-  const userName = authService.userName;
-  const userEmail = authService.userEmail;
-  // console.log("Interceptor: Request being intercepted for URL:", req.url);
-  // console.log("UserId:", userId);
-  // console.log(`${new Date().toLocaleTimeString()}`);
-  // console.log("User Name:", authService.userName);
+    const authService = inject(AuthService);
 
-  // Define headers object
-  const headers: { [name: string]: string } = {
-    // 'X-Users-Id': 'Inter' // Your test header
-  };
+    const token = localStorage.getItem('access_token');
 
-  if (userId) {
-    console.log("Interceptor: Found User ID, adding X-User-Id:", userId);
-    headers['X-User-Id'] = userId;
-    headers['X-User-Name'] = userName;
-    headers['X-User-Email'] = userEmail;
-  }
+    if (!token) return next(req);
+    // const userId = authService.uniqueUserId;
+    // const userName = authService.userName;
+    // const userEmail = authService.userEmail;
+    // console.log("Interceptor: Request being intercepted for URL:", req.url);
+    // console.log("UserId:", userId);
+    // console.log(`${new Date().toLocaleTimeString()}`);
+    // console.log("User Name:", authService.userName);
 
-  // Clone ONCE with all headers
-  const authReq = req.clone({
-    setHeaders: headers,
-    withCredentials: true
-  });
+    // Define headers object
+     const headers: { [name: string]: string } = {
+      Authorization: `Bearer ${token}`
+       // 'X-Users-Id': 'Inter' // Your test header
+      };
 
-  return next(authReq);
+    // if (userId) {
+    //   console.log("Interceptor: Found User ID, adding X-User-Id:", userId);
+    //   headers['X-User-Id'] = userId;
+    //   headers['X-User-Name'] = userName;
+    //   headers['X-User-Email'] = userEmail;
+    // }
+
+    // Clone ONCE with all headers
+    const authReq = req.clone({
+      setHeaders: headers,
+      // withCredentials: true
+    });
+
+    return next(authReq);
 };
