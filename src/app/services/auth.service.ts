@@ -64,6 +64,9 @@ get userEmail(): string {
       if (data && data.length > 0) {
         this.user.set(data[0]);
         this.userReady$.next(data[0]);
+        // localStorage.setItem('access_token', data[0].access_token);
+        const token = data[0].id_token;
+        if (token) sessionStorage.setItem('id_token', token);
         this.fetchUserProfile(data);
       } else {
         this.user.set(null);
@@ -86,7 +89,12 @@ get userEmail(): string {
 
   fetchUserProfile(data: any[]) {
 
-    this.http.post<any>(`${appConfig.baseUrl}/api/userProfile`,{}, { withCredentials: true }).subscribe({
+    const token = sessionStorage.getItem('id_token');
+    const headers: Record<string, string> = token 
+    ? { 'X-ID-Token': token } 
+    : {};
+
+    this.http.post<any>(`${appConfig.baseUrl}/api/userProfile`,{}, { headers }).subscribe({
       next: (profile) => {
 
         console.log('Profile is ' + JSON.stringify(profile, null, 2));
