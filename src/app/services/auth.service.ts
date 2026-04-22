@@ -16,7 +16,7 @@ export class AuthService {
   private http = inject(HttpClient);
   // Reactive signal to store user info
   user = signal<any | null>(null);
-
+  userProfile = signal<any | null>(null);
   get userName(): string {
 
     console.log("UserName called in AuthService");
@@ -58,53 +58,13 @@ get userEmail(): string {
     console.log(`Called google API ${new Date().toLocaleTimeString()}`);
   }
 
-  // async checkSession() {
-
-  //   // if (window.location.hostname === 'localhost') {
-  //   // // Inject a dummy user so your application thinks you are logged in
-  //   // this.user.set({
-  //   //       user_claims: [
-  //   //         { 
-  //   //           typ: 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier', 
-  //   //           val: '112577913013492532420' 
-  //   //         },
-  //   //         {
-  //   //             "typ": "name",
-  //   //             "val": "Anuj Local"
-  //   //         }
-  //   //       ]
-  //   //     });
-  //   //     console.log("Local Dev: Mock user set.");
-  //   //     return;
-  //   //   }
-
-  //   // Azure provides the user profile at this endpoint
-  //   this.http.get<any[]>('/.auth/me').subscribe({
-  //     next: (data) => {
-  //       if (data && data.length > 0) {
-  //         // console.log('Data is ' + JSON.stringify(data, null, 2));
-  //         this.user.set(data[0]);
-  //         this.userReady$.next(data[0]);
-  //         // this.fetchUserProfile();
-  //       }
-  //       else {
-  //         console.log("AuthService: User is NOT logged in (/.auth/me returned empty)");
-  //         this.user.set(null);
-  //       }
-  //     },
-  //     error: () => this.user.set(null)
-  //   });
-
-    
-  // }
-
   async checkSession(): Promise<any> {
   return firstValueFrom(this.http.get<any[]>('/.auth/me').pipe(
     tap(data => {
       if (data && data.length > 0) {
         this.user.set(data[0]);
         this.userReady$.next(data[0]);
-        this.fetchUserProfile();
+        this.fetchUserProfile(data);
       } else {
         this.user.set(null);
       }
@@ -124,23 +84,13 @@ get userEmail(): string {
     );
   }
 
+  fetchUserProfile(data: any[]) {
 
-
-
-
-
-
-  fetchUserProfile() {
-
-    
-    this.http.get<any>(`${appConfig.baseUrl}/api/userProfile`).subscribe({
+    this.http.post<any>(`${appConfig.baseUrl}/api/userProfile`, data).subscribe({
       next: (profile) => {
 
         console.log('Profile is ' + JSON.stringify(profile, null, 2));
-        // Store this in a separate signal, e.g., 'userProfile'
-        // This might contain: savedProperties, preferences, etc.
-        
-
+        this.userProfile.set(profile);
       }
     });
   }
