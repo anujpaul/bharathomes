@@ -15,8 +15,8 @@ export const appConfig :ApplicationConfig = {
         provideZonelessChangeDetection(),
         provideRouter(routes),
         // provideHttpClient()
-        // provideHttpClient(withInterceptors([authInterceptor])),
-        provideHttpClient(),
+        provideHttpClient(withInterceptors([authInterceptor])),
+        // provideHttpClient(),
         {
             provide: APP_INITIALIZER,
             useFactory: initializeApp,

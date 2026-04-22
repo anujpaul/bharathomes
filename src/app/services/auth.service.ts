@@ -94,7 +94,7 @@ get userEmail(): string {
     // ? { 'X-ID-Token': token } 
     // : {};
 
-    this.http.post<any>(`${appConfig.baseUrl}/api/userProfile`,{}, { headers: { 'Authorization': `Bearer ${token}` } }).subscribe({
+    this.http.post<any>(`${appConfig.baseUrl}/api/userProfile`,{}).subscribe({
       next: (profile) => {
 
         console.log('Profile is ' + JSON.stringify(profile, null, 2));

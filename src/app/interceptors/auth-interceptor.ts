@@ -12,7 +12,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
     const authService = inject(AuthService);
 
-    const token = localStorage.getItem('access_token');
+    // const token = localStorage.getItem('access_token');
+    const token = sessionStorage.getItem('id_token');
 
     if (!token) return next(req);
     // const userId = authService.uniqueUserId;
