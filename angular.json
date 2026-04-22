@@ -76,11 +76,23 @@
             "port": 3000,
             "host": "0.0.0.0"
           }
+        },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": [
+              "src/**/*.ts",
+              "src/**/*.html"
+            ]
+          }
         }
       }
     }
   },
   "cli": {
-    "analytics": "9e780d16-98da-4196-829e-07692a6446b2"
+    "analytics": "9e780d16-98da-4196-829e-07692a6446b2",
+    "schematicCollections": [
+      "angular-eslint"
+    ]
   }
 }

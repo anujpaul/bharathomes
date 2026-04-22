@@ -1,6 +1,7 @@
 <nav class="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex justify-between items-center h-16">
+      
       <a [routerLink]="['/']" class="flex items-center gap-2">
         <div class="bg-blue-600 p-2 rounded-lg">
           <lucide-icon [name]="HomeIcon" class="w-6 h-6 text-white"></lucide-icon>
@@ -18,47 +19,44 @@
         <a href="#" class="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">Agents</a>
       </div>
 
-
-
-
       <div class="flex items-center gap-4">
         <button class="p-2 text-gray-400 hover:text-gray-600 md:hidden">
           <lucide-icon [name]="SearchIcon" class="w-5 h-5"></lucide-icon>
         </button>
 
-        @if (authService.user()) {
-          <!-- <pre>{{ authService.user() | json }}</pre> -->
-          <div class="flex items-center gap-3">
-            <span class="text-sm font-medium text-gray-700">
-              {{ authService.userName }}
-            </span>
-            <a [href]="logoutUrl" 
-              class="text-sm font-medium text-red-600 hover:text-red-700 transition-colors">
-              Sign Out
-            </a>
-          </div>
-        } @else {
-          <a [href]="loginUrl" 
-            class="hidden md:flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-full transition-colors">
-            <lucide-icon [name]="UserIcon" class="w-4 h-4"></lucide-icon>
-            Sign In
-          </a>
-          <button class="hidden md:flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-full transition-colors">
-            Sign Up
-          </button>
-        }
+        <div class="hidden md:flex items-center gap-4">
+          @if (authService.user()) {
+            <span class="text-sm font-medium text-gray-700">{{ authService.userName }}</span>
+            <a [href]="logoutUrl" class="text-sm font-medium text-blue-600 hover:text-red-700">Sign Out</a>
+          } @else {
+            <a [href]="loginUrl" class="text-sm font-medium text-gray-700 hover:text-blue-600">Sign In</a>
+            <button class="text-sm font-medium text-gray-700 hover:text-blue-600">Sign Up</button>
+          }
+        </div>
 
         <button (click)="toggleMenu()" class="p-2 text-gray-600 md:hidden">
           <lucide-icon [name]="MenuIcon" class="w-6 h-6"></lucide-icon>
         </button>
-      </div> </div> </div> @if (isMenuOpen) {
-    <div class="md:hidden bg-white border-b border-gray-100">
-      <div class="px-4 pt-2 pb-4 space-y-1">
-        <a href="#" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600">Buy</a>
-        <a href="#" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600">Rent</a>
-        <a href="#" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600">Sell</a>
-        <a href="#" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600">Agents</a>
       </div>
+    </div>
+  </div>
+
+  @if (isMenuOpen) {
+    <div class="md:hidden bg-white border-b border-gray-100 p-4 space-y-4">
+      <a href="#" class="block text-base font-medium text-gray-700">Buy</a>
+      <a href="#" class="block text-base font-medium text-gray-700">Rent</a>
+      <a href="#" class="block text-base font-medium text-gray-700">Sell</a>
+      <a href="#" class="block text-base font-medium text-gray-700">Agents</a>
+      
+      <hr>
+
+      @if (authService.user()) {
+        <div class="text-sm text-gray-700">Hi, {{ authService.userName }}</div>
+        <a [href]="logoutUrl" class="block text-sm font-medium text-blue-600">Sign Out</a>
+      } @else {
+        <a [href]="loginUrl" class="block text-sm font-medium text-gray-700">Sign In</a>
+        <button class="block text-sm font-medium text-gray-700">Sign Up</button>
+      }
     </div>
   }
 </nav>
