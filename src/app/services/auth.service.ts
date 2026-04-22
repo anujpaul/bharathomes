@@ -25,7 +25,7 @@ export class AuthService {
     if (!userData || !userData.user_claims) return 'User';
     
     // Find the object where 'typ' is 'name'
-    const nameClaim = userData.user_claims.find((c: any) => c.typ === 'name');
+    const nameClaim = userData.user_claims.find((c: any) => c.typ === 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname');
     return nameClaim ? nameClaim.val : 'User';
   }
 
