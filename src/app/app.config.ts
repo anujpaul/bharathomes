@@ -14,22 +14,13 @@ export const appConfig :ApplicationConfig = {
     providers: [
         provideZonelessChangeDetection(),
         provideRouter(routes),
-        // provideHttpClient()
         provideHttpClient(withInterceptors([authInterceptor])),
         // provideHttpClient(),
-        {
-            provide: APP_INITIALIZER,
-            useFactory: initializeApp,
-            deps: [AuthService],
-            multi: true
-        }
+        // {
+            // provide: APP_INITIALIZER,
+            // useFactory: initializeApp,
+            // deps: [AuthService],
+            // multi: true
+        // }
     ]
 }
-
-//  {
-//   providers: [
-//     provideZonelessChangeDetection(),
-//     // provideHttpClient(),
-//     provideRouter(routes)
-//   ]
-// })
