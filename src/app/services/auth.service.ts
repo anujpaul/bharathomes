@@ -86,7 +86,7 @@ get userEmail(): string {
 
   fetchUserProfile(data: any[]) {
 
-    this.http.post<any>(`${appConfig.baseUrl}/api/userProfile`, data).subscribe({
+    this.http.post<any>(`${appConfig.baseUrl}/api/userProfile`,{}, { withCredentials: true }).subscribe({
       next: (profile) => {
 
         console.log('Profile is ' + JSON.stringify(profile, null, 2));
