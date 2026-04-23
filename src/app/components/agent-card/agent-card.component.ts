@@ -57,9 +57,13 @@ import { Agent } from '../../../types';
           <lucide-icon [name]="MessageSquareIcon" class="w-4 h-4"></lucide-icon>
           Chat
         </button>
-        <button class="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-blue-50 text-blue-600 font-bold text-sm hover:bg-blue-100 transition-colors">
-          <lucide-icon [name]="PhoneIcon" class="w-4 h-4"></lucide-icon>
-          Call
+        <button
+          (click)="togglePhone()"
+          class="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-blue-50 text-blue-600 font-bold text-sm hover:bg-blue-100 transition-colors"
+          [class.col-span-2]="showPhone"
+        >
+          <lucide-icon [name]="PhoneIcon" class="w-4 h-4 shrink-0"></lucide-icon>
+          {{ showPhone ? agent.phone : 'Call' }}
         </button>
       </div>
     </div>
@@ -71,4 +75,10 @@ export class AgentCardComponent {
   StarIcon = Star;
   MessageSquareIcon = MessageSquare;
   PhoneIcon = Phone;
+
+  showPhone = false;
+
+  togglePhone(): void {
+    this.showPhone = !this.showPhone;
+  }
 }

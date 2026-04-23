@@ -17,6 +17,7 @@ export interface Agent {
   id: string;
   name: string;
   role: string;
+  phone: string;
   image: string;
   rating: number;
   listingsCount: number;
