@@ -24,10 +24,28 @@ export interface Agent {
   specialization: string;
 }
 
-export interface UserProfile{
+export interface UserClaim {
+  typ: string;
+  val: string;
+}
 
+export interface AuthResponse {
+  access_token: string;
+  expires_on: string;
+  id_token?: string; // Optional, as you might not always have this
+  provider_name?: string;
+  user_claims: UserClaim[];
+  user_id: string;
+}
+
+export interface UserProfile {
   id: string;
   name: string;
   email: string;
-
+  phone?: string;
+  provider: 'google' | 'local';
+  createdAt: string;
+  savedPropertyIds: string[];
+  savedCount: number;
+  enquiriesCount: number;
 }

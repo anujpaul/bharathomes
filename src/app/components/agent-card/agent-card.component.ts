@@ -43,7 +43,7 @@ import { Agent } from '../../../types';
 
       <div class="space-y-3 mb-6">
         <div class="flex justify-between text-sm">
-          <span class="text-gray-500">Specialization</span>
+          <span class="text-gray-500">Specialization&nbsp;</span>
           <span class="font-semibold text-gray-900">{{agent.specialization}}</span>
         </div>
         <div class="flex justify-between text-sm">

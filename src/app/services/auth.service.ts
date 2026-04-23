@@ -2,13 +2,13 @@ import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, catchError, filter, firstValueFrom, Observable, of, take, tap, timestamp } from 'rxjs';
 import { appConfig } from '../config/app-config';
-import { UserProfile } from '@/types';
 
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
+  
 
   private userReady$ = new BehaviorSubject<any | null>(null);
   private idToken: string | null = null;  // ← memory only, not sessionStorage
@@ -18,7 +18,7 @@ export class AuthService {
   private http = inject(HttpClient);
   // Reactive signal to store user info
   user = signal<any | null>(null);
-  userProfile = signal<any | null>(null);
+  authResponse = signal<any | null>(null);
   get userName(): string {
 
     console.log("UserName called in AuthService");
@@ -101,7 +101,7 @@ get userEmail(): string {
       next: (profile) => {
 
         console.log('Profile is ' + JSON.stringify(profile, null, 2));
-        this.userProfile.set(profile);
+        this.authResponse.set(profile);
       }
     });
   }
@@ -118,4 +118,24 @@ get userEmail(): string {
 
     return this.idToken;
   }
+
+  async signInWithEmail(email: string, password: string): Promise<void> {
+    const response = await firstValueFrom(
+      this.http.post<any>(`${appConfig.baseUrl}/api/auth/login`, { email, password })
+    );
+
+    if (response && response.length > 0) {
+      const data = response[0];
+      this.setUser(data, data.access_token, data.expires_on);
+    } else {
+      throw new Error('Invalid credentials');
+    }
+  }
+
+  private setUser(userData: any, token: string, expiry: string) {
+  this.idToken = token;
+  this.tokenExpiry = new Date(expiry);
+  this.user.set(userData);
+  this.userReady$.next(userData);
+}
 }
