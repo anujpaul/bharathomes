@@ -2,7 +2,7 @@ import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, catchError, filter, firstValueFrom, Observable, of, take, tap, timestamp } from 'rxjs';
 import { appConfig } from '../config/app-config';
-
+import { Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root',
@@ -16,6 +16,7 @@ export class AuthService {
   // userProfile$!: Observable<UserProfile>;
 
   private http = inject(HttpClient);
+  private router = inject(Router);
   // Reactive signal to store user info
   user = signal<any | null>(null);
   authResponse = signal<any | null>(null);
@@ -70,7 +71,7 @@ get userEmail(): string {
         this.idToken = data[0].id_token;
         this.tokenExpiry = new Date(data[0].expires_on);
         // if (token) sessionStorage.setItem('id_token', token);
-        this.fetchUserProfile(data);
+        this.fetchUserProfile();
       } else {
         this.user.set(null);
       }
@@ -90,9 +91,9 @@ get userEmail(): string {
     );
   }
 
-  fetchUserProfile(data: any[]) {
+  fetchUserProfile() {
 
-    const token = sessionStorage.getItem('id_token');
+    // const token = sessionStorage.getItem('id_token');
     // const headers: Record<string, string> = token 
     // ? { 'X-ID-Token': token } 
     // : {};
@@ -102,7 +103,8 @@ get userEmail(): string {
 
         console.log('Profile is ' + JSON.stringify(profile, null, 2));
         this.authResponse.set(profile);
-      }
+      },
+      error: err => console.error('fetchUserProfile failed', err)
     });
   }
 
@@ -133,9 +135,56 @@ get userEmail(): string {
   }
 
   private setUser(userData: any, token: string, expiry: string) {
-  this.idToken = token;
-  this.tokenExpiry = new Date(expiry);
-  this.user.set(userData);
-  this.userReady$.next(userData);
+    this.idToken = token;
+    this.tokenExpiry = new Date(expiry);
+    this.user.set(userData);
+    this.userReady$.next(userData);
+  }
+
+  async signUpWithEmail(name: string, email: string, password: string): Promise<void> {
+  const response = await firstValueFrom(
+    this.http.post<any>(`${appConfig.baseUrl}/api/auth/register`, { name, email, password })
+  );
+
+  if (!response?.token) throw new Error('Registration failed');
+
+  this.idToken = response.token;
+  this.tokenExpiry = new Date(response.expiresAt);
+
+  const normalizedUser = {
+    user_id: response.user.id,
+    id: response.user.id,
+    name: response.user.name,
+    email: response.user.email,
+    user_claims: null,
+    provider_name: 'local'
+  };
+
+    this.user.set(normalizedUser as any);
+    this.userReady$.next(normalizedUser);
+    this.checkSession();
+    this.fetchUserProfile();
+  }
+
+  async signOut(): Promise<void> {
+  const user = this.user();
+  
+  // 1. Clear local application state
+  this.user.set(null);
+  this.idToken = null;
+  this.tokenExpiry = null;
+  this.authResponse.set(null);
+  this.userReady$.next(null);
+  sessionStorage.clear();
+
+  // 2. Logic based on provider
+  if (user?.provider_name === 'google') {
+    // Azure EasyAuth logout
+    window.location.href = '/.auth/logout';
+  } else {
+    // Local logout: Just navigate home
+    this.router.navigate(['/']);
+  }
 }
+
 }

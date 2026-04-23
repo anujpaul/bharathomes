@@ -74,7 +74,7 @@ import { LucideAngularModule, Home, Facebook, Twitter, Instagram, Linkedin, Mail
         </div>
 
         <div class="pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-500 font-medium uppercase tracking-widest">
-          <p>© 2024 BharatHomes UP. All Rights Reserved.</p>
+          <p>© 2026 BharatHomes UP. All Rights Reserved.</p>
           <div class="flex gap-8">
             <a href="#" class="hover:text-white transition-colors">Privacy Policy</a>
             <a href="#" class="hover:text-white transition-colors">Terms of Service</a>
