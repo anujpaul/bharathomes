@@ -11,6 +11,8 @@ import { UserProfile } from '@/types';
 export class AuthService {
 
   private userReady$ = new BehaviorSubject<any | null>(null);
+  private idToken: string | null = null;  // ← memory only, not sessionStorage
+  private tokenExpiry: Date | null = null;
   // userProfile$!: Observable<UserProfile>;
 
   private http = inject(HttpClient);
@@ -65,8 +67,9 @@ get userEmail(): string {
         this.user.set(data[0]);
         this.userReady$.next(data[0]);
         // localStorage.setItem('access_token', data[0].access_token);
-        const token = data[0].id_token;
-        if (token) sessionStorage.setItem('id_token', token);
+        this.idToken = data[0].id_token;
+        this.tokenExpiry = new Date(data[0].expires_on);
+        // if (token) sessionStorage.setItem('id_token', token);
         this.fetchUserProfile(data);
       } else {
         this.user.set(null);
@@ -94,12 +97,25 @@ get userEmail(): string {
     // ? { 'X-ID-Token': token } 
     // : {};
 
-    this.http.post<any>(`${appConfig.baseUrl}/api/userProfile`,{}, { headers: { 'Authorization': `Bearer ${token}` } }).subscribe({
+    this.http.post<any>(`${appConfig.baseUrl}/api/userProfile`,{}).subscribe({
       next: (profile) => {
 
         console.log('Profile is ' + JSON.stringify(profile, null, 2));
         this.userProfile.set(profile);
       }
     });
+  }
+
+    async getValidToken(): Promise<string | null> {
+    if (!this.idToken) return null;
+
+    if (this.tokenExpiry && new Date() >= this.tokenExpiry) {
+      await firstValueFrom(this.http.get('/.auth/refresh'));
+      const data = await firstValueFrom(this.http.get<any[]>('/.auth/me'));
+      this.idToken = data[0]?.id_token ?? null;
+      this.tokenExpiry = new Date(data[0]?.expires_on);
+    }
+
+    return this.idToken;
   }
 }
