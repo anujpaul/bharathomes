@@ -24,11 +24,3 @@ export const appConfig :ApplicationConfig = {
         }
     ]
 }
-
-//  {
-//   providers: [
-//     provideZonelessChangeDetection(),
-//     // provideHttpClient(),
-//     provideRouter(routes)
-//   ]
-// })

@@ -1,6 +1,6 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, catchError, filter, firstValueFrom, Observable, of, take, tap, timestamp } from 'rxjs';
+import { BehaviorSubject, catchError, filter, firstValueFrom, Observable, of, take, tap } from 'rxjs';
 import { appConfig } from '../config/app-config';
 import { Router } from '@angular/router';
 
@@ -8,114 +8,164 @@ import { Router } from '@angular/router';
   providedIn: 'root',
 })
 export class AuthService {
-  
 
+  private readonly TOKEN_KEY = 'local_auth_token';
   private userReady$ = new BehaviorSubject<any | null>(null);
-  private idToken: string | null = null;  // ← memory only, not sessionStorage
+  private idToken: string | null = null;
   private tokenExpiry: Date | null = null;
-  // userProfile$!: Observable<UserProfile>;
 
   private http = inject(HttpClient);
   private router = inject(Router);
-  // Reactive signal to store user info
+
   user = signal<any | null>(null);
   authResponse = signal<any | null>(null);
-  get userName(): string {
 
-    console.log("UserName called in AuthService");
+  // Constructor stays empty — app.config.ts APP_INITIALIZER calls checkSession()
+  constructor() {}
+
+  async checkSession(): Promise<void> {
+    const rehydrated = await this.tryRehydrateLocalUser();
+    if (rehydrated) return;
+
+    await firstValueFrom(
+      this.http.get<any[]>('/.auth/me').pipe(
+        tap(data => {
+          if (data && data.length > 0) {
+            this.user.set(data[0]);
+            this.userReady$.next(data[0]);
+            this.idToken = data[0].id_token;
+            this.tokenExpiry = new Date(data[0].expires_on);
+            this.fetchUserProfile();
+          } else {
+            this.user.set(null);
+          }
+        }),
+        catchError(err => {
+          console.error('Session check failed', err);
+          this.user.set(null);
+          return of(null);
+        })
+      )
+    );
+  }
+
+  private async tryRehydrateLocalUser(): Promise<boolean> {
+    const stored = localStorage.getItem(this.TOKEN_KEY);
+    if (!stored) return false;
+
+    try {
+      const parsed = JSON.parse(stored);
+      const { token, expiresAt, user } = parsed;
+
+      if (!token || !expiresAt || new Date() >= new Date(expiresAt)) {
+        localStorage.removeItem(this.TOKEN_KEY);
+        return false;
+      }
+
+      // Set token first so interceptor attaches it to the verify call
+      this.idToken = token;
+      this.tokenExpiry = new Date(expiresAt);
+
+      const profile = await firstValueFrom(
+        this.http.get<any>(`${appConfig.baseUrl}/api/user/profile`).pipe(
+          catchError(() => of(null))
+        )
+      );
+
+      if (!profile) {
+        localStorage.removeItem(this.TOKEN_KEY);
+        this.idToken = null;
+        this.tokenExpiry = null;
+        return false;
+      }
+
+      const restoredUser = {
+        user_id: user.email,
+        provider_name: 'local',
+        id_token: '',
+        access_token: token,
+        expires_on: expiresAt,
+        user_claims: [
+          { typ: 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname', val: user.name },
+          { typ: 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier', val: user.id },
+          { typ: 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress', val: user.email }
+        ]
+      };
+
+      this.user.set(restoredUser);
+      this.userReady$.next(restoredUser);
+      return true;
+
+    } catch {
+      localStorage.removeItem(this.TOKEN_KEY);
+      this.idToken = null;
+      this.tokenExpiry = null;
+      return false;
+    }
+  }
+
+  get userName(): string {
     const userData = this.user();
-    // Safely check if user_claims exists
-    if (!userData || !userData.user_claims) return 'User';
-    
-    // Find the object where 'typ' is 'name'
-    const nameClaim = userData.user_claims.find((c: any) => c.typ === 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname');
-    return nameClaim ? nameClaim.val : 'User';
+    if (!userData?.user_claims) return 'User';
+    const claim = userData.user_claims.find((c: any) =>
+      c.typ === 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname');
+    return claim?.val ?? 'User';
   }
 
   get uniqueUserId(): string | null {
-  const user = this.user();
-  if (!user || !user.user_claims) return null;
-  
-  // Find the claim specifically where the type is nameidentifier
-  const idClaim = user.user_claims.find((c: any) => 
-    c.typ === 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'
-  );
-  return idClaim ? idClaim.val : null;
-}
-
-get userEmail(): string {
-  const user = this.user();
-  if (!user || !user.user_claims) return 'No Email';
-
-  // Find the claim with the specific email address type
-  const emailClaim = user.user_claims.find((c: any) => 
-    c.typ === 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'
-  );
-
-  return emailClaim ? emailClaim.val : 'No Email';
-}
-
-  constructor() {
-    console.log(`Calling google api ${new Date().toLocaleTimeString()}`);
-    // this.checkSession();
-    console.log(`Called google API ${new Date().toLocaleTimeString()}`);
+    const userData = this.user();
+    if (!userData?.user_claims) return null;
+    const claim = userData.user_claims.find((c: any) =>
+      c.typ === 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier');
+    return claim?.val ?? null;
   }
 
-  async checkSession(): Promise<any> {
-  return firstValueFrom(this.http.get<any[]>('/.auth/me').pipe(
-    tap(data => {
-      if (data && data.length > 0) {
-        this.user.set(data[0]);
-        this.userReady$.next(data[0]);
-        // localStorage.setItem('access_token', data[0].access_token);
-        this.idToken = data[0].id_token;
-        this.tokenExpiry = new Date(data[0].expires_on);
-        // if (token) sessionStorage.setItem('id_token', token);
-        this.fetchUserProfile();
-      } else {
-        this.user.set(null);
-      }
-    }),
-    catchError((err) => {
-      console.error("AuthService: Session check failed", err);
-      this.user.set(null);
-      return of(null);
-    })
-  ));
-}
+  get userEmail(): string {
+    const userData = this.user();
+    if (!userData?.user_claims) return 'No Email';
+    const claim = userData.user_claims.find((c: any) =>
+      c.typ === 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress');
+    return claim?.val ?? 'No Email';
+  }
 
-  waitForUser() {
+  waitForUser(): Observable<any> {
     return this.userReady$.asObservable().pipe(
       filter(user => user !== null),
       take(1)
     );
   }
 
-  fetchUserProfile() {
-
-    // const token = sessionStorage.getItem('id_token');
-    // const headers: Record<string, string> = token 
-    // ? { 'X-ID-Token': token } 
-    // : {};
-
-    this.http.post<any>(`${appConfig.baseUrl}/api/userProfile`,{}).subscribe({
-      next: (profile) => {
-
-        console.log('Profile is ' + JSON.stringify(profile, null, 2));
-        this.authResponse.set(profile);
-      },
+  fetchUserProfile(): void {
+    this.http.post<any>(`${appConfig.baseUrl}/api/userProfile`, {}).subscribe({
+      next: profile => this.authResponse.set(profile),
       error: err => console.error('fetchUserProfile failed', err)
     });
   }
 
-    async getValidToken(): Promise<string | null> {
+  getProfile(): Observable<any> {
+    return this.http.get<any>(`${appConfig.baseUrl}/api/user/profile`);
+  }
+
+  async getValidToken(): Promise<string | null> {
     if (!this.idToken) return null;
 
     if (this.tokenExpiry && new Date() >= this.tokenExpiry) {
-      await firstValueFrom(this.http.get('/.auth/refresh'));
-      const data = await firstValueFrom(this.http.get<any[]>('/.auth/me'));
-      this.idToken = data[0]?.id_token ?? null;
-      this.tokenExpiry = new Date(data[0]?.expires_on);
+      const isLocal = this.user()?.provider_name === 'local';
+
+      if (isLocal) {
+        await this.signOut();
+        return null;
+      }
+
+      try {
+        await firstValueFrom(this.http.get('/.auth/refresh'));
+        const data = await firstValueFrom(this.http.get<any[]>('/.auth/me'));
+        this.idToken = data[0]?.id_token ?? null;
+        this.tokenExpiry = new Date(data[0]?.expires_on);
+      } catch {
+        await this.signOut();
+        return null;
+      }
     }
 
     return this.idToken;
@@ -123,68 +173,76 @@ get userEmail(): string {
 
   async signInWithEmail(email: string, password: string): Promise<void> {
     const response = await firstValueFrom(
-      this.http.post<any>(`${appConfig.baseUrl}/api/auth/login`, { email, password })
+      this.http.post<any[]>(`${appConfig.baseUrl}/api/auth/login`, { email, password })
     );
 
-    if (response && response.length > 0) {
-      const data = response[0];
-      this.setUser(data, data.access_token, data.expires_on);
-    } else {
-      throw new Error('Invalid credentials');
-    }
+    if (!response || response.length === 0) throw new Error('Invalid credentials');
+
+    const data = response[0];
+
+    localStorage.setItem(this.TOKEN_KEY, JSON.stringify({
+      token: data.access_token,
+      expiresAt: data.expires_on,
+      user: {
+        id: data.user_id,
+        name: data.user_claims.find((c: any) =>
+          c.typ === 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname')?.val ?? '',
+        email: data.user_claims.find((c: any) =>
+          c.typ === 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress')?.val ?? ''
+      }
+    }));
+
+    this.setUser(data, data.access_token, data.expires_on);
+    this.fetchUserProfile();
   }
 
-  private setUser(userData: any, token: string, expiry: string) {
+  async signUpWithEmail(name: string, email: string, password: string): Promise<void> {
+    const response = await firstValueFrom(
+      this.http.post<any[]>(`${appConfig.baseUrl}/api/auth/register`, { name, email, password })
+    );
+
+    if (!response || response.length === 0) throw new Error('Registration failed');
+
+    const data = response[0];
+
+    localStorage.setItem(this.TOKEN_KEY, JSON.stringify({
+      token: data.access_token,
+      expiresAt: data.expires_on,
+      user: {
+        id: data.user_id,
+        name: data.user_claims.find((c: any) =>
+          c.typ === 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname')?.val ?? '',
+        email: data.user_claims.find((c: any) =>
+          c.typ === 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress')?.val ?? ''
+      }
+    }));
+
+    this.setUser(data, data.access_token, data.expires_on);
+    this.fetchUserProfile();
+  }
+
+  private setUser(userData: any, token: string, expiry: string): void {
     this.idToken = token;
     this.tokenExpiry = new Date(expiry);
     this.user.set(userData);
     this.userReady$.next(userData);
   }
 
-  async signUpWithEmail(name: string, email: string, password: string): Promise<void> {
-  const response = await firstValueFrom(
-    this.http.post<any>(`${appConfig.baseUrl}/api/auth/register`, { name, email, password })
-  );
-
-  if (!response?.token) throw new Error('Registration failed');
-
-  this.idToken = response.token;
-  this.tokenExpiry = new Date(response.expiresAt);
-
-  const normalizedUser = {
-    user_id: response.user.id,
-    id: response.user.id,
-    name: response.user.name,
-    email: response.user.email,
-    user_claims: null,
-    provider_name: 'local'
-  };
-
-    this.user.set(normalizedUser as any);
-    this.userReady$.next(normalizedUser);
-    this.checkSession();
-    this.fetchUserProfile();
-  }
-
   async signOut(): Promise<void> {
-  const user = this.user();
-  
-  // 1. Clear local application state
-  this.user.set(null);
-  this.idToken = null;
-  this.tokenExpiry = null;
-  this.authResponse.set(null);
-  this.userReady$.next(null);
-  sessionStorage.clear();
+    const currentUser = this.user();
 
-  // 2. Logic based on provider
-  if (user?.provider_name === 'google') {
-    // Azure EasyAuth logout
-    window.location.href = '/.auth/logout';
-  } else {
-    // Local logout: Just navigate home
-    this.router.navigate(['/']);
+    this.user.set(null);
+    this.idToken = null;
+    this.tokenExpiry = null;
+    this.authResponse.set(null);
+    this.userReady$.next(null);
+    sessionStorage.clear();
+    localStorage.removeItem(this.TOKEN_KEY);
+
+    if (currentUser?.provider_name === 'google') {
+      window.location.href = '/.auth/logout?post_logout_redirect_uri=/';
+    } else {
+      this.router.navigate(['/']);
+    }
   }
-}
-
 }
