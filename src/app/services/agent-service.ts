@@ -11,7 +11,7 @@ export class AgentService {
 
   private baseUrl = appConfig.baseUrl;
   private http = inject(HttpClient);
-  private apiUrl = `${this.baseUrl}/api/agents`;
+  private apiUrl = `${this.baseUrl}/api/user/agents`;
   
   getAgents(): Observable<Agent[]>{
     return this.http.get<Agent[]>(this.apiUrl, { withCredentials: true });

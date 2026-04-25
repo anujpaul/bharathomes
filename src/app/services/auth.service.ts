@@ -49,6 +49,57 @@ export class AuthService {
     );
   }
 
+  async signInWithEmail(email: string, password: string): Promise<void> {
+    const response = await firstValueFrom(
+      this.http.post<any[]>(`${appConfig.baseUrl}/api/auth/login`, { email, password })
+    );
+
+    if (!response || response.length === 0) throw new Error('Invalid credentials');
+
+    const data = response[0];
+
+    localStorage.setItem(this.TOKEN_KEY, JSON.stringify({
+      token: data.access_token,
+      expiresAt: data.expires_on,
+      user: {
+        id: data.user_id,
+        name: data.user_claims.find((c: any) =>
+          c.typ === 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname')?.val ?? '',
+        email: data.user_claims.find((c: any) =>
+          c.typ === 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress')?.val ?? ''
+      }
+    }));
+
+    this.setUser(data, data.access_token, data.expires_on);
+    this.fetchUserProfile();
+  }
+
+  async signUpWithEmail(name: string, email: string, password: string): Promise<void> {
+    const response = await firstValueFrom(
+      this.http.post<any[]>(`${appConfig.baseUrl}/api/auth/register`, { name, email, password })
+    );
+
+    if (!response || response.length === 0) throw new Error('Registration failed');
+
+    const data = response[0];
+
+    localStorage.setItem(this.TOKEN_KEY, JSON.stringify({
+      token: data.access_token,
+      expiresAt: data.expires_on,
+      user: {
+        id: data.user_id,
+        name: data.user_claims.find((c: any) =>
+          c.typ === 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname')?.val ?? '',
+        email: data.user_claims.find((c: any) =>
+          c.typ === 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress')?.val ?? ''
+      }
+    }));
+
+    this.setUser(data, data.access_token, data.expires_on);
+    this.fetchUserProfile();
+  }
+
+
   private async tryRehydrateLocalUser(): Promise<boolean> {
     const stored = localStorage.getItem(this.TOKEN_KEY);
     if (!stored) return false;
@@ -136,7 +187,7 @@ export class AuthService {
   }
 
   fetchUserProfile(): void {
-    this.http.post<any>(`${appConfig.baseUrl}/api/userProfile`, {}).subscribe({
+    this.http.post<any>(`${appConfig.baseUrl}/api/user/userProfile`, {}).subscribe({
       next: profile => this.authResponse.set(profile),
       error: err => console.error('fetchUserProfile failed', err)
     });
@@ -171,56 +222,7 @@ export class AuthService {
     return this.idToken;
   }
 
-  async signInWithEmail(email: string, password: string): Promise<void> {
-    const response = await firstValueFrom(
-      this.http.post<any[]>(`${appConfig.baseUrl}/api/auth/login`, { email, password })
-    );
-
-    if (!response || response.length === 0) throw new Error('Invalid credentials');
-
-    const data = response[0];
-
-    localStorage.setItem(this.TOKEN_KEY, JSON.stringify({
-      token: data.access_token,
-      expiresAt: data.expires_on,
-      user: {
-        id: data.user_id,
-        name: data.user_claims.find((c: any) =>
-          c.typ === 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname')?.val ?? '',
-        email: data.user_claims.find((c: any) =>
-          c.typ === 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress')?.val ?? ''
-      }
-    }));
-
-    this.setUser(data, data.access_token, data.expires_on);
-    this.fetchUserProfile();
-  }
-
-  async signUpWithEmail(name: string, email: string, password: string): Promise<void> {
-    const response = await firstValueFrom(
-      this.http.post<any[]>(`${appConfig.baseUrl}/api/auth/register`, { name, email, password })
-    );
-
-    if (!response || response.length === 0) throw new Error('Registration failed');
-
-    const data = response[0];
-
-    localStorage.setItem(this.TOKEN_KEY, JSON.stringify({
-      token: data.access_token,
-      expiresAt: data.expires_on,
-      user: {
-        id: data.user_id,
-        name: data.user_claims.find((c: any) =>
-          c.typ === 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname')?.val ?? '',
-        email: data.user_claims.find((c: any) =>
-          c.typ === 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress')?.val ?? ''
-      }
-    }));
-
-    this.setUser(data, data.access_token, data.expires_on);
-    this.fetchUserProfile();
-  }
-
+  
   private setUser(userData: any, token: string, expiry: string): void {
     this.idToken = token;
     this.tokenExpiry = new Date(expiry);

@@ -12,7 +12,7 @@ export class PropertyService {
   private baseUrl = appConfig.baseUrl;
   
   private http = inject(HttpClient);
-  private apiUrl = `${this.baseUrl}/api/properties`;
+  private apiUrl = `${this.baseUrl}/api/property`;
 
   getProperties(): Observable<Property[]> {
       console.log(`Base URL : ${this.baseUrl}`);
