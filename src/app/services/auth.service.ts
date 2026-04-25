@@ -75,28 +75,42 @@ export class AuthService {
   }
 
   async signUpWithEmail(name: string, email: string, password: string): Promise<void> {
-    const response = await firstValueFrom(
-      this.http.post<any[]>(`${appConfig.baseUrl}/api/auth/register`, { name, email, password })
-    );
+    try{
+      const response = await firstValueFrom(
+        this.http.post<any[]>(`${appConfig.baseUrl}/api/auth/register`, { name, email, password })
+      );
 
-    if (!response || response.length === 0) throw new Error('Registration failed');
+      if (!response || response.length === 0) throw new Error('Registration failed');
 
-    const data = response[0];
+      const data = response[0];
 
-    localStorage.setItem(this.TOKEN_KEY, JSON.stringify({
-      token: data.access_token,
-      expiresAt: data.expires_on,
-      user: {
-        id: data.user_id,
-        name: data.user_claims.find((c: any) =>
-          c.typ === 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname')?.val ?? '',
-        email: data.user_claims.find((c: any) =>
-          c.typ === 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress')?.val ?? ''
+      localStorage.setItem(this.TOKEN_KEY, JSON.stringify({
+        token: data.access_token,
+        expiresAt: data.expires_on,
+        user: {
+          id: data.user_id,
+          name: data.user_claims.find((c: any) =>
+            c.typ === 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname')?.val ?? '',
+          email: data.user_claims.find((c: any) =>
+            c.typ === 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress')?.val ?? ''
+        }
+      }));
+
+      this.setUser(data, data.access_token, data.expires_on);
+      this.fetchUserProfile();
+    }
+    catch(err: any){
+      if (err.status === 409) {
+        throw new Error(err.error?.message || 'Email already registered');
       }
-    }));
 
-    this.setUser(data, data.access_token, data.expires_on);
-    this.fetchUserProfile();
+      if (err.status === 401) {
+        throw new Error(err.error?.message || 'Unauthorized');
+      }
+
+      throw new Error('Something went wrong');
+
+    }
   }
 
 
@@ -187,7 +201,7 @@ export class AuthService {
   }
 
   fetchUserProfile(): void {
-    this.http.post<any>(`${appConfig.baseUrl}/api/user/userProfile`, {}).subscribe({
+    this.http.post<any>(`${appConfig.baseUrl}/api/user/profile`, {}).subscribe({
       next: profile => this.authResponse.set(profile),
       error: err => console.error('fetchUserProfile failed', err)
     });

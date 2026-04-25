@@ -43,7 +43,7 @@ export interface UserProfile {
   name: string;
   email: string;
   phone?: string;
-  provider: 'google' | 'local';
+  provider: 'google' | 'local' | 'microsoft';
   createdAt: string;
   savedPropertyIds: string[];
   savedCount: number;
