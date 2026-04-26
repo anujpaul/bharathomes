@@ -139,7 +139,7 @@ export class AuthService {
       this.tokenExpiry = new Date(expiresAt);
 
       const profile = await firstValueFrom(
-        this.http.post<any>(`${appConfig.baseUrl}/api/user/profile`,{}).pipe(
+        this.http.get<any>(`${appConfig.baseUrl}/api/user/profile`,{}).pipe(
           catchError(() => of(null))
         )
       );
@@ -208,7 +208,7 @@ export class AuthService {
   }
 
   fetchUserProfile(): void {
-    this.http.post<any>(`${appConfig.baseUrl}/api/user/profile`, {}).subscribe({
+    this.http.get<any>(`${appConfig.baseUrl}/api/user/profile`, {}).subscribe({
       next: profile => this.authResponse.set(profile),
       error: err => console.error('fetchUserProfile failed', err)
     });
