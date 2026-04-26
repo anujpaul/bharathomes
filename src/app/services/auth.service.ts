@@ -121,7 +121,6 @@ export class AuthService {
     }
   }
 
-
   private async tryRehydrateLocalUser(): Promise<boolean> {
     const stored = localStorage.getItem(this.TOKEN_KEY);
     if (!stored) return false;
@@ -218,15 +217,31 @@ export class AuthService {
   editUserProfile(updatedProfile: any): void {
     this.http.put<any>(`${appConfig.baseUrl}/api/user/profile`, 
       updatedProfile).subscribe({
-      next: profile => this.authResponse.set(profile),
+      next: profile => {
+        this.authResponse.set(profile);
+        const currentUser = this.user();
+        if (currentUser?.user_claims) {
+        const updatedClaims = currentUser.user_claims.map((c: any) => {
+          if (c.typ === 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname') {
+            return { ...c, val: profile.name };
+          }
+          return c;
+        });
+
+        this.user.set({
+          ...currentUser,
+          user_claims: updatedClaims
+        });
+      }
+      },
       error: err => console.error('Update Profile failed', err)
     });
   }
   
 
-  getProfile(): Observable<any> {
-    return this.http.post<any>(`${appConfig.baseUrl}/api/user/profile`,{});
-  }
+  // getProfile(): Observable<any> {
+  //   return this.http.post<any>(`${appConfig.baseUrl}/api/user/profile`,{});
+  // }
 
   async getValidToken(): Promise<string | null> {
     if (!this.idToken) return null;

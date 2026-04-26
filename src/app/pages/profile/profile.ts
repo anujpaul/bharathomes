@@ -189,7 +189,8 @@ export class ProfileComponent {
   save() {
     // TODO: call backend update API
     console.log('Saving:', this.editModel);
-
+    this.authService.editUserProfile(this.editModel);
+    
     this.isEditing.set(false);
   }
 }
