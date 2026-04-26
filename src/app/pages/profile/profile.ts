@@ -31,7 +31,7 @@ import { FormsModule } from '@angular/forms';
         <!-- View Mode -->
         @if (!isEditing()) {
           <div class="info">
-            <p><strong>Provider:</strong> {{ profile()?.provider }}</p>
+            <p><strong>Phone:</strong> {{ profile()?.phone }}</p>
           </div>
 
           <button class="btn primary" (click)="startEdit()">
@@ -49,8 +49,8 @@ import { FormsModule } from '@angular/forms';
             <label>Email</label>
             <input [(ngModel)]="editModel.email" disabled />
 
-            <label>Provider</label>
-            <input [value]="profile()?.provider" disabled />
+            <label>Phone</label>
+            <input [(ngModel)]="editModel.phone"/>
 
           </div>
 
@@ -170,14 +170,16 @@ export class ProfileComponent {
 
   editModel = {
     name: '',
-    email: ''
+    email: '',
+    phone: ''
   };
 
   startEdit() {
     const p = this.profile();
     this.editModel = {
       name: p.name,
-      email: p.email
+      email: p.email,
+      phone: p.phone
     };
     this.isEditing.set(true);
   }
