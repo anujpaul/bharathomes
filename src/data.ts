@@ -8,6 +8,7 @@ export const PROPERTIES: Property[] = [
     location: 'Sector 150, Noida Expressway',
     city: 'Noida',
     beds: 4,
+    agentId: [""],
     baths: 4,
     sqft: 3200,
     type: 'Apartment',

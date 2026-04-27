@@ -9,6 +9,7 @@ export interface Property {
   sqft: number;
   type: 'Apartment' | 'Villa' | 'Plot' | 'Commercial';
   image: string[];
+  agentId: string [];
   isFeatured?: boolean;
   expresswayProximity?: boolean;
 }
@@ -42,6 +43,7 @@ export interface UserProfile {
   id: string;
   name: string;
   email: string;
+  photo: string;
   phone?: string;
   provider: 'google' | 'local' | 'microsoft';
   createdAt: string;
