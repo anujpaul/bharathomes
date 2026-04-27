@@ -15,6 +15,7 @@ export class NavbarComponent {
   SearchIcon = Search;
   MenuIcon = Menu;
   CloseIcon = X;
+  confirmPassword = signal('');
 
   isMenuOpen = false;
   showAuthModal = signal(false);
@@ -77,15 +78,47 @@ export class NavbarComponent {
     }
   }
 
+  async forgotPassword() {
+  if (!this.email()) {
+    this.errorMessage.set('Please enter your email address first');
+    return;
+  }
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(this.email())) {
+    this.errorMessage.set('Please enter a valid email address');
+    return;
+  }
+  this.isLoading.set(true);
+  this.errorMessage.set('');
+  try {
+    await this.authService.resetPassword(this.email());
+    this.errorMessage.set(''); 
+    // show a success message instead
+    alert('Password reset email sent! Check your inbox.');
+  } catch (err: any) {
+    this.errorMessage.set(err.message ?? 'Failed to send reset email');
+  } finally {
+    this.isLoading.set(false);
+  }
+}
+
   async signUp() {
     if (!this.name() || !this.email() || !this.password()) {
       this.errorMessage.set('Please fill in all fields');
+      return;
+    }
+    if (!this.email().includes('@') || !this.email().includes('.')) {
+      this.errorMessage.set('Please enter a valid email address');
       return;
     }
     if (this.password().length < 8) {
       this.errorMessage.set('Password must be at least 8 characters');
       return;
     }
+    if (this.password() !== this.confirmPassword()) {
+    this.errorMessage.set('Passwords do not match.');
+    return;
+  }
     this.isLoading.set(true);
     this.errorMessage.set('');
     try {

@@ -5,7 +5,7 @@ import { PropertyService } from '@/app/services/property-service';
 import { Property, Agent } from '@/types';
 import { Observable, forkJoin, switchMap } from 'rxjs';
 import { LightboxService } from '@/app/services/lightbox-service';
-import { HttpClient } from '@angular/common/http';
+import { AgentService } from '@/app/services/agent-service';
 
 @Component({
   selector: 'app-property-details',
@@ -168,7 +168,8 @@ export class PropertyDetailsComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private propertyService = inject(PropertyService);
   private lightboxService = inject(LightboxService);
-  private http = inject(HttpClient);
+  private agentService = inject(AgentService);
+  
 
   property$!: Observable<Property>;
   agents: Agent[] = [];
@@ -182,9 +183,7 @@ export class PropertyDetailsComponent implements OnInit {
       // Fetch property once to get agentIds, then fetch all agents in parallel
       this.propertyService.getPropertyById(id).subscribe(property => {
         this.agentsLoading = true;
-        const requests = property.agentId.map(aid =>
-          this.http.get<Agent>(`http://localhost:5000/api/agent/${aid}`)
-        );
+        const requests = property.agentId.map(aid => this.agentService.getAgent(aid));
         forkJoin(requests).subscribe({
           next: (agents) => { this.agents = agents; this.agentsLoading = false; },
           error: () => { this.agentsLoading = false; }

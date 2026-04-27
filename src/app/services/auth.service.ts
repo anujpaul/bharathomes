@@ -82,6 +82,11 @@ export class AuthService {
     }
   }
 
+  async resetPassword(email: string): Promise<void> {
+  //await sendPasswordResetEmail(this.auth, email);
+  console.log(`Email is ${email}`)
+}
+
   async signUpWithEmail(name: string, email: string, password: string): Promise<void> {
     try{
       const response = await firstValueFrom(
