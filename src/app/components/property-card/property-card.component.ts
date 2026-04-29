@@ -15,7 +15,7 @@ import { RouterLink } from '@angular/router';
       <div class="relative aspect-[4/3] overflow-hidden">
 
         <swiper-container [loop]="true" [pagination]="true" [navigation]="true">
-          @for (img of property.image; track img; let i = $index) {
+          @for (img of property.images; track img; let i = $index) {
             <swiper-slide>
               <img [src]="img" class="w-full h-full object-cover cursor-pointer" (click)="openLightbox(i)" />
             </swiper-slide>
@@ -104,11 +104,11 @@ export class PropertyCardComponent {
   SquareIcon = Square;
 
   ngOnInit() {
-  console.log("Images array length:", this.property.image.length);
+  console.log("Images array length:", this.property.images.length);
 }
   
   openLightbox(index: number) {
-    this.lightbox.open(this.property.image, index);
+    this.lightbox.open(this.property.images, index);
   }
 
   formatCurrency(amount: number): string {

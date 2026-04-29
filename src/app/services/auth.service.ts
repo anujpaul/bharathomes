@@ -126,60 +126,61 @@ export class AuthService {
     }
   }
 
-  private async tryRehydrateLocalUser(): Promise<boolean> {
-    const stored = localStorage.getItem(this.TOKEN_KEY);
-    if (!stored) return false;
+    private async tryRehydrateLocalUser(): Promise<boolean> {
+      const stored = localStorage.getItem(this.TOKEN_KEY);
+      if (!stored) return false;
 
-    try {
-      const parsed = JSON.parse(stored);
-      const { token, expiresAt, user } = parsed;
+      try {
+        const parsed = JSON.parse(stored);
+        const { token, expiresAt, user } = parsed;
 
-      if (!token || !expiresAt || new Date() >= new Date(expiresAt)) {
-        localStorage.removeItem(this.TOKEN_KEY);
-        return false;
-      }
+        if (!token || !expiresAt || new Date() >= new Date(expiresAt)) {
+          localStorage.removeItem(this.TOKEN_KEY);
+          return false;
+        }
 
-      // Set token first so interceptor attaches it to the verify call
-      this.idToken = token;
-      this.tokenExpiry = new Date(expiresAt);
+        this.idToken = token;
+        this.tokenExpiry = new Date(expiresAt);
 
-      const profile = await firstValueFrom(
-        this.http.get<any>(`${appConfig.baseUrl}/api/user/profile`,{}).pipe(
-          catchError(() => of(null))
-        )
-      );
+        const profile = await firstValueFrom(
+          this.http.get<any>(`${appConfig.baseUrl}/api/user/profile`, {}).pipe(
+            catchError(() => of(null))
+          )
+        );
 
-      if (!profile) {
+        if (!profile) {
+          localStorage.removeItem(this.TOKEN_KEY);
+          this.idToken = null;
+          this.tokenExpiry = null;
+          return false;
+        }
+
+        this.authResponse.set(profile); // ← ADD THIS — was missing!
+
+        const restoredUser = {
+          user_id: user.email,
+          provider_name: 'local',
+          id_token: '',
+          access_token: token,
+          expires_on: expiresAt,
+          user_claims: [
+            { typ: 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname', val: user.name },
+            { typ: 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier', val: user.id },
+            { typ: 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress', val: user.email }
+          ]
+        };
+
+        this.user.set(restoredUser);
+        this.userReady$.next(restoredUser);
+        return true;
+
+      } catch {
         localStorage.removeItem(this.TOKEN_KEY);
         this.idToken = null;
         this.tokenExpiry = null;
         return false;
       }
-
-      const restoredUser = {
-        user_id: user.email,
-        provider_name: 'local',
-        id_token: '',
-        access_token: token,
-        expires_on: expiresAt,
-        user_claims: [
-          { typ: 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname', val: user.name },
-          { typ: 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier', val: user.id },
-          { typ: 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress', val: user.email }
-        ]
-      };
-
-      this.user.set(restoredUser);
-      this.userReady$.next(restoredUser);
-      return true;
-
-    } catch {
-      localStorage.removeItem(this.TOKEN_KEY);
-      this.idToken = null;
-      this.tokenExpiry = null;
-      return false;
     }
-  }
 
   get userName(): string {
     const userData = this.user();

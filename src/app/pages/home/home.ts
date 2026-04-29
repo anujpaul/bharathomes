@@ -15,14 +15,11 @@ import { Agent, Property } from '@/types';
   selector: 'app-home',
   imports: [
     CommonModule,
-    NavbarComponent,
     HeroComponent,
     FiltersComponent,
     PropertyCardComponent,
-    AgentCardComponent,
-    FooterComponent,
-    PropertyDetailsComponent
-  ],
+    AgentCardComponent
+],
   templateUrl: `./home.page.html`,
   styles: ``,
 })

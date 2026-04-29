@@ -8,7 +8,7 @@ export interface Property {
   baths: number;
   sqft: number;
   type: 'Apartment' | 'Villa' | 'Plot' | 'Commercial';
-  image: string[];
+  images: string[];
   agentId: string [];
   isFeatured?: boolean;
   expresswayProximity?: boolean;
@@ -19,7 +19,7 @@ export interface Agent {
   name: string;
   role: string;
   phone: string;
-  image: string;
+  userPhoto: string;
   rating: number;
   listingsCount: number;
   specialization: string;

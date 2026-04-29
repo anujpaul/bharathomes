@@ -12,7 +12,7 @@ import { Agent } from '../../../types';
       <div class="flex items-center gap-4 mb-6">
         <div class="relative">
           <img
-            [src]="agent.image"
+            [src]="agent.userPhoto"
             [alt]="agent.name"
             class="w-16 h-16 rounded-2xl object-cover"
             referrerPolicy="no-referrer"

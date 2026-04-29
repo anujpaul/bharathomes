@@ -19,15 +19,15 @@ import { AgentService } from '@/app/services/agent-service';
         <!-- GALLERY -->
         <div class="gallery-container">
           <div class="hero-image">
-            <img [src]="property.image[0]" (click)="openLightbox(property, 0)" alt="Main">
+            <img [src]="property.images[0]" (click)="openLightbox(property, 0)" alt="Main">
           </div>
           <div class="thumbnail-grid">
-            @for (img of property.image.slice(1, 5); track img; let i = $index) {
+            @for (img of property.images.slice(1, 5); track img; let i = $index) {
               <div class="thumbnail-wrapper">
                 <img [src]="img" (click)="openLightbox(property, i + 1)" alt="Thumb">
-                @if (i === 3 && property.image.length > 5) {
+                @if (i === 3 && property.images.length > 5) {
                   <div class="more-overlay" (click)="openLightbox(property, 5); $event.stopPropagation()">
-                    <span>+{{ property.image.length - 5 }}</span>
+                    <span>+{{ property.images.length - 5 }}</span>
                   </div>
                 }
               </div>
@@ -93,7 +93,7 @@ import { AgentService } from '@/app/services/agent-service';
             @if (!agentsLoading) {
               @for (agent of agents; track agent.id) {
                 <div class="agent-card">
-                  <img class="agent-photo" [src]="agent.image" [alt]="agent.name">
+                  <img class="agent-photo" [src]="agent.userPhoto" [alt]="agent.name">
                   <div class="agent-info">
                     <div class="agent-name">{{ agent.name }}</div>
                     <div class="agent-role">{{ agent.role }}</div>
@@ -193,6 +193,6 @@ export class PropertyDetailsComponent implements OnInit {
   }
 
   openLightbox(property: Property, index: number) {
-    this.lightboxService.open(property.image, index);
+    this.lightboxService.open(property.images, index);
   }
 }
