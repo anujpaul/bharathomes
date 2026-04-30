@@ -17,18 +17,26 @@ import { appConfig } from '@/app/config/app-config';
         <!-- Header -->
         <div class="profile-header">
 
-          <!-- Avatar with upload -->
-          <div class="avatar-wrapper" (click)="fileInput.click()">
+          <!-- Avatar: click = preview (view mode) OR upload (edit mode) -->
+          <div class="avatar-wrapper">
             @if (profile()?.userPhoto) {
-              <img class="avatar-img" [src]="profile()?.userPhoto" alt="Profile Photo">
+              <img class="avatar-img"
+                   [src]="profile()?.userPhoto"
+                   alt="Profile Photo"
+                   (click)="isEditing() ? fileInput.click() : openPreview()">
             } @else {
-              <div class="avatar">
+              <div class="avatar"
+                   (click)="isEditing() ? fileInput.click() : null">
                 {{ profile()?.name?.charAt(0) || 'U' }}
               </div>
             }
-            <div class="avatar-overlay">
-              @if (uploading()) { ⏳ } @else { 📷 }
-            </div>
+
+            <!-- Camera button: only visible in edit mode -->
+            @if (isEditing()) {
+              <div class="avatar-overlay" (click)="fileInput.click()">
+                @if (uploading()) { ⏳ } @else { 📷 }
+              </div>
+            }
           </div>
           <input #fileInput type="file" accept="image/*" style="display:none"
                  (change)="onFileSelected($event)" />
@@ -66,16 +74,26 @@ import { appConfig } from '@/app/config/app-config';
       <div class="loading">Loading profile...</div>
     }
   </div>
+
+  <!-- Photo Preview Modal -->
+  @if (showPreview()) {
+    <div class="modal-backdrop" (click)="closePreview()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <button class="modal-close" (click)="closePreview()">✕</button>
+        <img [src]="profile()?.userPhoto" alt="Profile Photo" class="preview-img">
+      </div>
+    </div>
+  }
   `,
   styles: [`
     .profile-wrapper { display: flex; justify-content: center; padding: 40px; font-family: Arial, sans-serif; }
     .profile-card { width: 420px; background: #ffffff; border-radius: 16px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
     .profile-header { display: flex; align-items: center; gap: 16px; }
 
-    .avatar-wrapper { position: relative; cursor: pointer; width: 60px; height: 60px; flex-shrink: 0; }
-    .avatar-img { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; display: block; }
+    .avatar-wrapper { position: relative; width: 60px; height: 60px; flex-shrink: 0; }
+    .avatar-img { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; display: block; cursor: pointer; }
     .avatar { width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #4f46e5, #9333ea); color: white; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; }
-    .avatar-overlay { position: absolute; inset: 0; border-radius: 50%; background: rgba(0,0,0,0.4); color: white; display: flex; align-items: center; justify-content: center; font-size: 16px; opacity: 0; transition: opacity 0.2s; }
+    .avatar-overlay { position: absolute; inset: 0; border-radius: 50%; background: rgba(0,0,0,0.4); color: white; display: flex; align-items: center; justify-content: center; font-size: 16px; cursor: pointer; opacity: 0; transition: opacity 0.2s; }
     .avatar-wrapper:hover .avatar-overlay { opacity: 1; }
 
     h2 { margin: 0; }
@@ -88,19 +106,29 @@ import { appConfig } from '@/app/config/app-config';
     input:focus { border-color: #4f46e5; }
     .actions { display: flex; justify-content: space-between; margin-top: 16px; }
     .loading { font-size: 16px; color: gray; }
+
+    /* Modal */
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.75); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+    .modal-content { position: relative; border-radius: 12px; overflow: hidden; max-width: 90vw; max-height: 90vh; }
+    .modal-close { position: absolute; top: 10px; right: 12px; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; }
+    .preview-img { display: block; max-width: 90vw; max-height: 85vh; object-fit: contain; }
   `]
 })
-  export class ProfileComponent {
-    private authService = inject(AuthService);
-    private http = inject(HttpClient);
+export class ProfileComponent {
+  private authService = inject(AuthService);
+  private http = inject(HttpClient);
 
-    profile = this.authService.authResponse;
-    isEditing = signal(false);
-    uploading = signal(false);
+  profile = this.authService.authResponse;
+  isEditing = signal(false);
+  uploading = signal(false);
+  showPreview = signal(false);   // ← new
 
-    editModel = { name: '', email: '', phone: '' };
+  editModel = { name: '', email: '', phone: '' };
 
-    async onFileSelected(event: Event) {
+  openPreview() { this.showPreview.set(true); }
+  closePreview() { this.showPreview.set(false); }
+
+  async onFileSelected(event: Event) {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
 
@@ -112,10 +140,7 @@ import { appConfig } from '@/app/config/app-config';
       await this.http.post<{ userPhoto: string }>(
         `${appConfig.baseUrl}/api/user/upload-photo`, formData
       ).toPromise();
-
-      // Let the API return the fresh profile with correct field names
       this.authService.fetchUserProfile();
-
     } catch (err) {
       console.error('Upload failed', err);
     } finally {
