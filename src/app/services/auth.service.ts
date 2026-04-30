@@ -124,7 +124,24 @@ export class AuthService {
 
   async resetPassword(email: string): Promise<void> {
     //await sendPasswordResetEmail(this.auth, email);
+
+    await firstValueFrom(
+      this.http.post(`${appConfig.baseUrl}/api/auth/send-reset-otp`, {email})
+    )
     console.log(`Email is ${email}`)
+  }
+
+  async verifyResetOtp(email: string, otp: string, newPassword: string): Promise<void> {
+    try {
+      await firstValueFrom(
+        this.http.post(`${appConfig.baseUrl}/api/auth/verify-reset`, {
+          email, otp, newPassword
+        })
+      );
+    } catch (err: any) {
+      if (err.status === 401) throw new Error(err.error?.message || 'Invalid or expired code');
+      throw new Error('Something went wrong');
+    }
   }
 
   async signUpWithEmail(name: string, email: string, password: string): Promise<{ requiresOtp: boolean }> {
@@ -174,6 +191,7 @@ export class AuthService {
 
         if (!token || !expiresAt || new Date() >= new Date(expiresAt)) {
           localStorage.removeItem(this.TOKEN_KEY);
+
           return false;
         }
 

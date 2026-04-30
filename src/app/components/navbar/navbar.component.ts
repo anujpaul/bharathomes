@@ -32,7 +32,11 @@ export class NavbarComponent {
   isLoading = signal(false);
   errorMessage = signal('');
 
-
+  showResetOtpStep = signal(false);
+  resetOtp = signal('');
+  resetEmail = signal('');
+  newPassword = signal('');
+  confirmNewPassword = signal('');
 
   authService = inject(AuthService);
 
@@ -48,7 +52,12 @@ export class NavbarComponent {
   closeAuthModal() {
     this.showAuthModal.set(false);
     this.showOtpStep.set(false);
+    this.showResetOtpStep.set(false);
     this.otp.set('');
+    this.resetOtp.set('');          
+    this.resetEmail.set('');        
+    this.newPassword.set('');       
+    this.confirmNewPassword.set('');
     this.pendingEmail.set('');
     this.email.set('');
     this.password.set('');
@@ -100,15 +109,46 @@ export class NavbarComponent {
   this.errorMessage.set('');
   try {
     await this.authService.resetPassword(this.email());
+    this.resetEmail.set(this.email())
+    this.showResetOtpStep.set(true);
     this.errorMessage.set(''); 
     // show a success message instead
-    alert('Password reset email sent! Check your inbox.');
-  } catch (err: any) {
-    this.errorMessage.set(err.message ?? 'Failed to send reset email');
-  } finally {
-    this.isLoading.set(false);
+    // alert('Password reset email sent! Check your inbox.');
+    } catch (err: any) {
+      this.errorMessage.set(err.message ?? 'Failed to send reset code');
+    } finally {
+      this.isLoading.set(false);
+    }
   }
-}
+
+  async submitResetOtp() {
+    if (!this.resetOtp() || this.resetOtp().length !== 6) {
+      this.errorMessage.set('Please enter the 6-digit code');
+      return;
+    }
+    if (this.newPassword().length < 8) {
+      this.errorMessage.set('Password must be at least 8 characters');
+      return;
+    }
+    if (this.newPassword() !== this.confirmNewPassword()) {
+      this.errorMessage.set('Passwords do not match');
+      return;
+    }
+    this.isLoading.set(true);
+    this.errorMessage.set('');
+    try {
+      await this.authService.verifyResetOtp(
+        this.resetEmail(), this.resetOtp(), this.newPassword()
+      );
+      this.closeAuthModal();
+      // Optionally switch to sign in after reset
+      this.openAuthModal('signin');
+    } catch (err: any) {
+      this.errorMessage.set(err.message ?? 'Verification failed');
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
 
 async signUp() {
   if (!this.name() || !this.email() || !this.password()) {

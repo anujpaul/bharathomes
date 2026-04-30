@@ -119,8 +119,59 @@
         <span class="text-xs text-gray-400">or</span>
         <hr class="flex-1 border-gray-200">
       </div>
-
-      @if (showOtpStep()) {
+      @if (showResetOtpStep()) {
+        <div class="flex flex-col gap-3">
+          <p class="text-sm text-gray-600 text-center">
+            A reset code was sent to
+            <span class="font-medium">{{ resetEmail() }}</span>.
+            Enter it below to set a new password.
+          </p>
+      
+          <input
+            type="text"
+            placeholder="6-digit code"
+            maxlength="6"
+            [value]="resetOtp()"
+            (input)="resetOtp.set($any($event.target).value)"
+            class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-center
+                   tracking-widest focus:outline-none focus:ring-2 focus:ring-blue-500">
+      
+          <input
+            type="password"
+            placeholder="New password (min 8 characters)"
+            [value]="newPassword()"
+            (input)="newPassword.set($any($event.target).value)"
+            class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm
+                   focus:outline-none focus:ring-2 focus:ring-blue-500">
+      
+          <input
+            type="password"
+            placeholder="Confirm new password"
+            [value]="confirmNewPassword()"
+            (input)="confirmNewPassword.set($any($event.target).value)"
+            class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm
+                   focus:outline-none focus:ring-2 focus:ring-blue-500">
+      
+          @if (errorMessage()) {
+            <p class="text-xs text-red-500">{{ errorMessage() }}</p>
+          }
+      
+          <button
+            (click)="submitResetOtp()"
+            [disabled]="isLoading()"
+            class="w-full bg-blue-600 text-white rounded-xl px-4 py-3 text-sm font-medium
+                   hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            {{ isLoading() ? 'Resetting...' : 'Reset Password' }}
+          </button>
+      
+          <button
+            (click)="authService.resetPassword(resetEmail())"
+            class="text-xs text-blue-600 hover:underline text-center">
+            Resend code
+          </button>
+        </div>
+      
+      } @else if (showOtpStep()) {
         <div class="flex flex-col gap-3">
           <p class="text-sm text-gray-600 text-center">
             A one-time code was sent to
@@ -230,6 +281,8 @@
         </p>
       
       }
+
+
 
     </div>
   </div>
