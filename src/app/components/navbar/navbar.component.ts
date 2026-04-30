@@ -17,6 +17,11 @@ export class NavbarComponent {
   CloseIcon = X;
   confirmPassword = signal('');
 
+  showOtpStep = signal(false);
+  otp = signal('');
+  pendingEmail = signal('');   // captured when OTP step activates
+  otpSent = signal(false);
+
   isMenuOpen = false;
   showAuthModal = signal(false);
   authMode = signal<'signin' | 'signup'>('signin');
@@ -40,8 +45,11 @@ export class NavbarComponent {
     this.resetForm();
   }
 
-  closeAuthModal() { 
-    this.showAuthModal.set(false); 
+  closeAuthModal() {
+    this.showAuthModal.set(false);
+    this.showOtpStep.set(false);
+    this.otp.set('');
+    this.pendingEmail.set('');
     this.email.set('');
     this.password.set('');
     this.errorMessage.set('');
@@ -102,34 +110,66 @@ export class NavbarComponent {
   }
 }
 
-  async signUp() {
-    if (!this.name() || !this.email() || !this.password()) {
-      this.errorMessage.set('Please fill in all fields');
-      return;
-    }
-    if (!this.email().includes('@') || !this.email().includes('.')) {
-      this.errorMessage.set('Please enter a valid email address');
-      return;
-    }
-    if (this.password().length < 8) {
-      this.errorMessage.set('Password must be at least 8 characters');
-      return;
-    }
-    if (this.password() !== this.confirmPassword()) {
+async signUp() {
+  if (!this.name() || !this.email() || !this.password()) {
+    this.errorMessage.set('Please fill in all fields');
+    return;
+  }
+  if (!this.email().includes('@') || !this.email().includes('.')) {
+    this.errorMessage.set('Please enter a valid email address');
+    return;
+  }
+  if (this.password().length < 8) {
+    this.errorMessage.set('Password must be at least 8 characters');
+    return;
+  }
+  if (this.password() !== this.confirmPassword()) {
     this.errorMessage.set('Passwords do not match.');
     return;
   }
-    this.isLoading.set(true);
-    this.errorMessage.set('');
-    try {
-      await this.authService.signUpWithEmail(this.name(), this.email(), this.password());
-      this.closeAuthModal();
-    } catch (err: any) {
-      this.errorMessage.set(err.message ?? 'Sign up failed');
-    } finally {
-      this.isLoading.set(false);
+
+  this.isLoading.set(true);
+  this.errorMessage.set('');
+
+  try {
+    const result = await this.authService.signUpWithEmail(
+      this.name(), this.email(), this.password()
+    );
+
+    if (result.requiresOtp) {
+      this.pendingEmail.set(this.email());
+      this.showOtpStep.set(true);
+      return;
     }
+
+    this.closeAuthModal();
+  } catch (err: any) {
+    this.errorMessage.set(err.message ?? 'Sign up failed');
+  } finally {
+    this.isLoading.set(false);
   }
+}
+
+async submitOtp() {
+  if (!this.otp() || this.otp().length !== 6) {
+    this.errorMessage.set('Please enter the 6-digit code');
+    return;
+  }
+
+  this.isLoading.set(true);
+  this.errorMessage.set('');
+
+  try {
+    await this.authService.verifyAndMerge(
+      this.pendingEmail(), this.otp(), this.password(), this.name()
+    );
+    this.closeAuthModal();
+  } catch (err: any) {
+    this.errorMessage.set(err.message ?? 'Verification failed');
+  } finally {
+    this.isLoading.set(false);
+  }
+}
 
   async handleSignOut() {
   await this.authService.signOut();

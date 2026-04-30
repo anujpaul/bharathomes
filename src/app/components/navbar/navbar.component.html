@@ -120,77 +120,119 @@
         <hr class="flex-1 border-gray-200">
       </div>
 
-      <div class="flex flex-col gap-3">
-        @if (authMode() === 'signup') {
+      @if (showOtpStep()) {
+        <div class="flex flex-col gap-3">
+          <p class="text-sm text-gray-600 text-center">
+            A one-time code was sent to
+            <span class="font-medium">{{ pendingEmail() }}</span>.
+            Enter it below to link your account.
+          </p>
+      
           <input
             type="text"
-            placeholder="Full name"
-            [value]="name()"
-            (input)="name.set($any($event.target).value)"
+            placeholder="6-digit code"
+            maxlength="6"
+            [value]="otp()"
+            (input)="otp.set($any($event.target).value)"
+            class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-center
+                   tracking-widest focus:outline-none focus:ring-2 focus:ring-blue-500">
+      
+          @if (errorMessage()) {
+            <p class="text-xs text-red-500">{{ errorMessage() }}</p>
+          }
+      
+          <button
+            (click)="submitOtp()"
+            [disabled]="isLoading()"
+            class="w-full bg-blue-600 text-white rounded-xl px-4 py-3 text-sm font-medium
+                   hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            {{ isLoading() ? 'Verifying...' : 'Verify & Link Account' }}
+          </button>
+      
+          <button
+            (click)="authService.sendMergeOtp(pendingEmail())"
+            class="text-xs text-blue-600 hover:underline text-center">
+            Resend code
+          </button>
+        </div>
+      
+      } @else {
+      
+        <div class="flex flex-col gap-3">
+          @if (authMode() === 'signup') {
+            <input
+              type="text"
+              placeholder="Full name"
+              [value]="name()"
+              (input)="name.set($any($event.target).value)"
+              class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm
+                     focus:outline-none focus:ring-2 focus:ring-blue-500">
+          }
+      
+          <input
+            type="email"
+            placeholder="Email address"
+            [value]="email()"
+            (input)="email.set($any($event.target).value)"
             class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm
                    focus:outline-none focus:ring-2 focus:ring-blue-500">
-        }
-
-        <input
-          type="email"
-          placeholder="Email address"
-          [value]="email()"
-          (input)="email.set($any($event.target).value)"
-          class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm
-                 focus:outline-none focus:ring-2 focus:ring-blue-500">
-
-        <input
-          type="password"
-          [placeholder]="authMode() === 'signup' ? 'Password (min 8 characters)' : 'Password'"
-          [value]="password()"
-          (input)="password.set($any($event.target).value)"
-          class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm
-                 focus:outline-none focus:ring-2 focus:ring-blue-500">
-
-        @if (authMode() === 'signin') {
-          <div class="text-right">
-            <button (click)="forgotPassword()"
-              class="text-xs text-blue-600 hover:underline">
-              Forgot password?
-            </button>
-          </div>
-        }
-        
-        @if (authMode() === 'signup') {
-        <input
-          type="password"
-          placeholder="Confirm password"
-          [value]="confirmPassword()"
-          (input)="confirmPassword.set($any($event.target).value)"
-          class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm
-                focus:outline-none focus:ring-2 focus:ring-blue-500">
+      
+          <input
+            type="password"
+            [placeholder]="authMode() === 'signup' ? 'Password (min 8 characters)' : 'Password'"
+            [value]="password()"
+            (input)="password.set($any($event.target).value)"
+            class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm
+                   focus:outline-none focus:ring-2 focus:ring-blue-500">
+      
+          @if (authMode() === 'signin') {
+            <div class="text-right">
+              <button (click)="forgotPassword()"
+                class="text-xs text-blue-600 hover:underline">
+                Forgot password?
+              </button>
+            </div>
+          }
+      
+          @if (authMode() === 'signup') {
+            <input
+              type="password"
+              placeholder="Confirm password"
+              [value]="confirmPassword()"
+              (input)="confirmPassword.set($any($event.target).value)"
+              class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm
+                     focus:outline-none focus:ring-2 focus:ring-blue-500">
+          }
+      
+          @if (errorMessage()) {
+            <p class="text-xs text-red-500">{{ errorMessage() }}</p>
+          }
+      
+          <button
+            (click)="authMode() === 'signin' ? signIn() : signUp()"
+            [disabled]="isLoading()"
+            class="w-full bg-blue-600 text-white rounded-xl px-4 py-3 text-sm font-medium
+                   hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            {{ isLoading() ? 'Please wait...' : (authMode() === 'signin' ? 'Sign In' : 'Create Account') }}
+          </button>
+        </div>
+      
+        <p class="text-center text-xs text-gray-500 mt-5">
+          @if (authMode() === 'signin') {
+            Don't have an account?
+            <button (click)="switchMode('signup')"
+              class="text-blue-600 font-medium hover:underline ml-1">Sign up</button>
+          } @else {
+            Already have an account?
+            <button (click)="switchMode('signin')"
+              class="text-blue-600 font-medium hover:underline ml-1">Sign in</button>
+          }
+        </p>
+      
       }
-
-        @if (errorMessage()) {
-          <p class="text-xs text-red-500">{{ errorMessage() }}</p>
-        }
-
-        <button
-          (click)="authMode() === 'signin' ? signIn() : signUp()"
-          [disabled]="isLoading()"
-          class="w-full bg-blue-600 text-white rounded-xl px-4 py-3 text-sm font-medium
-                 hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-          {{ isLoading() ? 'Please wait...' : (authMode() === 'signin' ? 'Sign In' : 'Create Account') }}
-        </button>
-      </div>
-
-      <p class="text-center text-xs text-gray-500 mt-5">
-        @if (authMode() === 'signin') {
-          Don't have an account?
-          <button (click)="switchMode('signup')"
-            class="text-blue-600 font-medium hover:underline ml-1">Sign up</button>
-        } @else {
-          Already have an account?
-          <button (click)="switchMode('signin')"
-            class="text-blue-600 font-medium hover:underline ml-1">Sign in</button>
-        }
-      </p>
 
     </div>
   </div>
+
+  
 }

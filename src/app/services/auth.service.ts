@@ -82,21 +82,65 @@ export class AuthService {
     }
   }
 
-  async resetPassword(email: string): Promise<void> {
-  //await sendPasswordResetEmail(this.auth, email);
-  console.log(`Email is ${email}`)
-}
-
-  async signUpWithEmail(name: string, email: string, password: string): Promise<void> {
-    try{
+  async sendMergeOtp(email: string): Promise<void> {
+    await firstValueFrom(
+      this.http.post(`${appConfig.baseUrl}/api/auth/send-merge-otp`, { email })
+    );
+  }
+  
+  async verifyAndMerge(
+    email: string, otp: string, password: string, name: string
+  ): Promise<void> {
+    try {
       const response = await firstValueFrom(
-        this.http.post<any[]>(`${appConfig.baseUrl}/api/auth/register`, { name, email, password })
+        this.http.post<any[]>(
+          `${appConfig.baseUrl}/api/auth/verify-merge`,
+          { email, otp, password, name }
+        )
       );
-
-      if (!response || response.length === 0) throw new Error('Registration failed');
-
+      if (!response || response.length === 0) throw new Error('Merge failed');
       const data = response[0];
+  
+      localStorage.setItem(this.TOKEN_KEY, JSON.stringify({
+        token: data.access_token,
+        expiresAt: data.expires_on,
+        user: {
+          id: data.user_claims.find((c: any) =>
+            c.typ === 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier')?.val ?? '',
+          name: data.user_claims.find((c: any) =>
+            c.typ === 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname')?.val ?? '',
+          email: data.user_claims.find((c: any) =>
+            c.typ === 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress')?.val ?? ''
+        }
+      }));
+  
+      this.setUser(data, data.access_token, data.expires_on);
+      this.fetchUserProfile();
+    } catch (err: any) {
+      if (err.status === 401) throw new Error(err.error?.message || 'Invalid OTP');
+      throw new Error('Something went wrong');
+    }
+  }
 
+  async resetPassword(email: string): Promise<void> {
+    //await sendPasswordResetEmail(this.auth, email);
+    console.log(`Email is ${email}`)
+  }
+
+  async signUpWithEmail(name: string, email: string, password: string): Promise<{ requiresOtp: boolean }> {
+    try {
+      const response = await firstValueFrom(
+        this.http.post<any>(`${appConfig.baseUrl}/api/auth/register`, { name, email, password })
+      );
+  
+      if (response?.requiresOtp) {
+        await this.sendMergeOtp(email);
+        return { requiresOtp: true };
+      }
+  
+      const data = response[0];
+      if (!data) throw new Error('Registration failed');
+  
       localStorage.setItem(this.TOKEN_KEY, JSON.stringify({
         token: data.access_token,
         expiresAt: data.expires_on,
@@ -108,21 +152,15 @@ export class AuthService {
             c.typ === 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress')?.val ?? ''
         }
       }));
-
+  
       this.setUser(data, data.access_token, data.expires_on);
       this.fetchUserProfile();
-    }
-    catch(err: any){
-      if (err.status === 409) {
-        throw new Error(err.error?.message || 'Email already registered');
-      }
-
-      if (err.status === 401) {
-        throw new Error(err.error?.message || 'Unauthorized');
-      }
-
+      return { requiresOtp: false };
+  
+    } catch (err: any) {
+      if (err.status === 409) throw new Error(err.error?.message || 'Email already registered');
+      if (err.status === 401) throw new Error(err.error?.message || 'Unauthorized');
       throw new Error('Something went wrong');
-
     }
   }
 
