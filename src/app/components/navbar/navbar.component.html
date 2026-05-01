@@ -289,3 +289,7 @@
 
   
 }
+
+@if (showUserTypeModal()) {
+  <app-user-type-modal (done)="onUserTypeSelected($event)" />
+}

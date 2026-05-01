@@ -51,3 +51,4 @@ export interface UserProfile {
   savedCount: number;
   enquiriesCount: number;
 }
+

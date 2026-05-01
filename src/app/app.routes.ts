@@ -9,4 +9,5 @@ export const routes: Routes = [
   { path: '', component: HomePageComponent },
   { path: 'property/:id', component: PropertyDetailsComponent },
   { path: 'profile', component: ProfileComponent },
+  { path: '**', redirectTo: '' }
 ];

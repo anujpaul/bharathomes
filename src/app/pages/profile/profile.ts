@@ -5,11 +5,20 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { appConfig } from '@/app/config/app-config';
 
+const USER_TYPES = [
+  { value: 'buyer', label: 'Buyer', icon: '🏠' },
+  { value: 'seller', label: 'Seller', icon: '💰' },
+  { value: 'agent', label: 'Agent', icon: '🤝' },
+  { value: 'hybrid', label: 'Buy & Sell', icon: '🔄' }
+];
+
 @Component({
   selector: 'app-profile',
   standalone: true,
   imports: [CommonModule, FormsModule],
+  
   template: `
+  
   <div class="profile-wrapper">
     @if (profile()) {
       <div class="profile-card">
@@ -52,6 +61,16 @@ import { appConfig } from '@/app/config/app-config';
         @if (!isEditing()) {
           <div class="info">
             <p><strong>Phone:</strong> {{ profile()?.phone }}</p>
+            <p>
+              <strong>Account Type:</strong>
+              @if (currentUserType) {
+                <span class="type-badge">
+                  {{ currentUserType.icon }} {{ currentUserType.label }}
+                </span>
+              } @else {
+                <span class="muted">Not set</span>
+              }
+          </p>
           </div>
           <button class="btn primary" (click)="startEdit()">Edit Profile</button>
         } @else {
@@ -62,6 +81,19 @@ import { appConfig } from '@/app/config/app-config';
             <input [(ngModel)]="editModel.email" disabled />
             <label>Phone</label>
             <input [(ngModel)]="editModel.phone" />
+            <label>Account Type</label>
+            <div class="type-grid">
+              @for (type of userTypes; track type.value) {
+                <button
+                  type="button"
+                  (click)="editModel.userType = type.value"
+                  [class.selected]="editModel.userType === type.value"
+                  class="type-option">
+                  <span>{{ type.icon }}</span>
+                  <span>{{ type.label }}</span>
+                </button>
+              }
+            </div>
           </div>
           <div class="actions">
             <button class="btn" (click)="cancel()">Cancel</button>
@@ -112,18 +144,55 @@ import { appConfig } from '@/app/config/app-config';
     .modal-content { position: relative; border-radius: 12px; overflow: hidden; max-width: 90vw; max-height: 90vh; }
     .modal-close { position: absolute; top: 10px; right: 12px; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; }
     .preview-img { display: block; max-width: 90vw; max-height: 85vh; object-fit: contain; }
+    .type-badge { 
+      display: inline-block; 
+      background: #ede9fe; 
+      color: #4f46e5; 
+      padding: 2px 10px; 
+      border-radius: 20px; 
+      font-size: 13px; 
+      margin-left: 6px; 
+    }
+    .type-grid { 
+      display: grid; 
+      grid-template-columns: 1fr 1fr; 
+      gap: 8px; 
+      margin-top: 4px; 
+    }
+    .type-option { 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      gap: 4px; 
+      padding: 10px; 
+      border: 1px solid #ddd; 
+      border-radius: 10px; 
+      background: white; 
+      cursor: pointer; 
+      font-size: 13px; 
+      transition: all 0.15s; 
+    }
+    .type-option.selected { 
+      border-color: #4f46e5; 
+      background: #ede9fe; 
+      color: #4f46e5; 
+    }
   `]
 })
 export class ProfileComponent {
+
+  
   private authService = inject(AuthService);
   private http = inject(HttpClient);
 
   profile = this.authService.authResponse;
   isEditing = signal(false);
   uploading = signal(false);
-  showPreview = signal(false);   // ← new
+  showPreview = signal(false);
+  
+  userTypes = USER_TYPES;
 
-  editModel = { name: '', email: '', phone: '' };
+  editModel = { name: '', email: '', phone: '', userType: '' };
 
   openPreview() { this.showPreview.set(true); }
   closePreview() { this.showPreview.set(false); }
@@ -150,7 +219,7 @@ export class ProfileComponent {
 
   startEdit() {
     const p = this.profile();
-    this.editModel = { name: p.name, email: p.email, phone: p.phone };
+    this.editModel = { name: p.name, email: p.email, phone: p.phone, userType: p.userType };
     this.isEditing.set(true);
   }
 
@@ -160,4 +229,11 @@ export class ProfileComponent {
     this.authService.editUserProfile(this.editModel);
     this.isEditing.set(false);
   }
+
+  
+
+  get currentUserType() {
+    return USER_TYPES.find(t => t.value === this.profile()?.userType);
+  }
+  
 }

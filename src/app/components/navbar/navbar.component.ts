@@ -1,16 +1,20 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LucideAngularModule, Home, Search, Menu, X } from 'lucide-angular';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '@/app/services/auth.service';
+import { UserTypeModalComponent } from '../user-type-modal/user-type-modal.component';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule, RouterLink],
+  imports: [CommonModule, LucideAngularModule, RouterLink, UserTypeModalComponent],
   templateUrl: './navbar.component.html'
 })
 export class NavbarComponent {
+
+  loginUrl = '/.auth/login/google?post_login_redirect_uri=/';
+  logoutUrl = '/.auth/logout?post_login_redirect_uri=/';
   HomeIcon = Home;
   SearchIcon = Search;
   MenuIcon = Menu;
@@ -190,32 +194,39 @@ async signUp() {
   }
 }
 
-async submitOtp() {
-  if (!this.otp() || this.otp().length !== 6) {
-    this.errorMessage.set('Please enter the 6-digit code');
-    return;
+  async submitOtp() {
+    if (!this.otp() || this.otp().length !== 6) {
+      this.errorMessage.set('Please enter the 6-digit code');
+      return;
+    }
+
+    this.isLoading.set(true);
+    this.errorMessage.set('');
+
+      try {
+        await this.authService.verifyAndMerge(
+          this.pendingEmail(), this.otp(), this.password(), this.name()
+        );
+        this.closeAuthModal();
+      } catch (err: any) {
+        this.errorMessage.set(err.message ?? 'Verification failed');
+      } finally {
+        this.isLoading.set(false);
+      }
+    }
+
+    async handleSignOut() {
+    await this.authService.signOut();
   }
 
-  this.isLoading.set(true);
-  this.errorMessage.set('');
+  showUserTypeModal = computed(() => {
+    const profile = this.authService.authResponse();
+    const user = this.authService.user();
+    return !!user && !!profile && !profile.userType;
+  });
 
-  try {
-    await this.authService.verifyAndMerge(
-      this.pendingEmail(), this.otp(), this.password(), this.name()
-    );
-    this.closeAuthModal();
-  } catch (err: any) {
-    this.errorMessage.set(err.message ?? 'Verification failed');
-  } finally {
-    this.isLoading.set(false);
+  onUserTypeSelected(type: string) {
+    // modal will hide automatically because authResponse signal updated
+    console.log('User type set:', type);
   }
-}
-
-  async handleSignOut() {
-  await this.authService.signOut();
-  }
-
-
-  loginUrl = '/.auth/login/google?post_login_redirect_uri=/';
-  logoutUrl = '/.auth/logout?post_login_redirect_uri=/';
 }
