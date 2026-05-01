@@ -25,7 +25,7 @@ steps:
     echo "Replacing configuration in $CONFIG_FILE"
     # Use sed to replace the localhost string with the production URL
     # sed -i 's|http://localhost:5000|https://bharathomes-service.azurewebsites.net|g' $CONFIG_FILE
-    sed -i 's|http://localhost:5000|http://4.187.146.241:8080|g' $CONFIG_FILE 
+    sed -i 's|http://localhost:5000|https://bharathomes-api.centralindia.azurecontainer.io|g' $CONFIG_FILE 
     echo "Replacement complete."
   displayName: 'Replace config.js values'
 
