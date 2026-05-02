@@ -22,10 +22,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       if (!token) return next(req);
 
       return next(req.clone({
-        setHeaders: { 
-          Authorization: `Bearer ${token}`,
-          'Ocp-Apim-Subscription-Key': 'd1be26c49a51476dbc485c1510149204'
-        }
+        setHeaders: { Authorization: `Bearer ${token}` }
       }));
     })
   );

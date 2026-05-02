@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, catchError, filter, firstValueFrom, Observable, of, take, tap } from 'rxjs';
 import { appConfig } from '../config/app-config';
 import { Router } from '@angular/router';
+import { UserProfile } from '@/types';
 
 @Injectable({
   providedIn: 'root',
@@ -18,7 +19,7 @@ export class AuthService {
   private router = inject(Router);
 
   user = signal<any | null>(null);
-  authResponse = signal<any | null>(null);
+  authResponse = signal<UserProfile | null>(null);
 
   // Constructor stays empty — app.config.ts APP_INITIALIZER calls checkSession()
   constructor() {}
@@ -357,7 +358,7 @@ export class AuthService {
       this.router.navigate(['/']);
     }
   }
-  async updateUserType(userType: string): Promise<void> {
+  async updateUserType(userType: UserProfile['userType']): Promise<void> {
     await firstValueFrom(
       this.http.patch(`${appConfig.baseUrl}/api/user/type`, { userType })
     );

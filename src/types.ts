@@ -45,7 +45,10 @@ export interface UserProfile {
   email: string;
   photo: string;
   phone?: string;
-  provider: 'google' | 'local' | 'microsoft';
+  userType?: 'buyer' | 'seller' | 'agent' | 'hybrid';
+  properttiesListed: number;
+  userPhoto?: string;
+  provider: 'google' | 'local' | 'microsoft' | 'hybrid';
   createdAt: string;
   savedPropertyIds: string[];
   savedCount: number;

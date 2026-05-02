@@ -10,6 +10,7 @@ import { PropertyDetailsComponent } from '../property-details/property-details';
 import { PropertyService } from '@/app/services/property-service';
 import { AgentService } from '@/app/services/agent-service';
 import { Agent, Property } from '@/types';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-home',
@@ -18,7 +19,8 @@ import { Agent, Property } from '@/types';
     HeroComponent,
     FiltersComponent,
     PropertyCardComponent,
-    AgentCardComponent
+    AgentCardComponent,
+    RouterLink
 ],
   templateUrl: `./home.page.html`,
   styles: ``,

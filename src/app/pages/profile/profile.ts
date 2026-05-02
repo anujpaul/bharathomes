@@ -4,6 +4,7 @@ import { AuthService } from '@/app/services/auth.service';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { appConfig } from '@/app/config/app-config';
+import { UserProfile } from '@/types';
 
 const USER_TYPES = [
   { value: 'buyer', label: 'Buyer', icon: '🏠' },
@@ -86,7 +87,7 @@ const USER_TYPES = [
               @for (type of userTypes; track type.value) {
                 <button
                   type="button"
-                  (click)="editModel.userType = type.value"
+                  (click)="setUserType(type.value)"
                   [class.selected]="editModel.userType === type.value"
                   class="type-option">
                   <span>{{ type.icon }}</span>
@@ -192,7 +193,7 @@ export class ProfileComponent {
   
   userTypes = USER_TYPES;
 
-  editModel = { name: '', email: '', phone: '', userType: '' };
+  editModel: Partial<UserProfile> = { name: '', email: '', phone: '', userType: undefined };
 
   openPreview() { this.showPreview.set(true); }
   closePreview() { this.showPreview.set(false); }
@@ -217,9 +218,13 @@ export class ProfileComponent {
     }
   }
 
+  setUserType(value: string) {
+    this.editModel.userType = value as UserProfile['userType'];
+  }
+
   startEdit() {
     const p = this.profile();
-    this.editModel = { name: p.name, email: p.email, phone: p.phone, userType: p.userType };
+    this.editModel = { name: p?.name, email: p?.email, phone: p?.phone, userType: p?.userType };
     this.isEditing.set(true);
   }
 

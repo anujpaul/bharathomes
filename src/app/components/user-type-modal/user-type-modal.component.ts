@@ -1,6 +1,7 @@
 import { Component, inject, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '@/app/services/auth.service';
+import { UserProfile } from '@/types';
 
 const USER_TYPES = [
   {
@@ -45,7 +46,7 @@ const USER_TYPES = [
         <div class="grid grid-cols-2 gap-3 mb-6">
           @for (type of userTypes; track type.value) {
             <button
-              (click)="select(type.value)"
+              (click)="selectType(type.value)"
               [class.ring-2]="selected === type.value"
               [class.ring-blue-500]="selected === type.value"
               [class.bg-blue-50]="selected === type.value"
@@ -78,14 +79,18 @@ export class UserTypeModalComponent {
   authService = inject(AuthService);
 
   userTypes = USER_TYPES;
-  selected = '';
+  selected :UserProfile['userType'] = undefined;
   isLoading = false;
   errorMessage = '';
 
   done = output<string>(); // emits the chosen type to parent
 
-  select(value: string) {
+  select(value: UserProfile['userType']) {
     this.selected = value;
+  }
+
+  selectType(value: string) {
+    this.selected = value as UserProfile['userType'];
   }
 
   async confirm() {
