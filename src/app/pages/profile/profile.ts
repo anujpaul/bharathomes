@@ -230,8 +230,6 @@ export class ProfileComponent {
     this.isEditing.set(false);
   }
 
-  
-
   get currentUserType() {
     return USER_TYPES.find(t => t.value === this.profile()?.userType);
   }

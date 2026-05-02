@@ -95,9 +95,11 @@ export class UserTypeModalComponent {
     try {
       await this.authService.updateUserType(this.selected);
       this.done.emit(this.selected);
-    } catch {
+    } catch(err) {
+      console.error('❌ updateUserType threw:', err);
       this.errorMessage = 'Something went wrong, please try again';
     } finally {
+      console.log('🏁 finally ran');
       this.isLoading = false;
     }
   }
