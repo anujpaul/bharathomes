@@ -1,16 +1,17 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { AsyncPipe, DecimalPipe, NgFor } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { PropertyService } from '@/app/services/property-service';
 import { Property, Agent } from '@/types';
 import { Observable, forkJoin, switchMap } from 'rxjs';
 import { LightboxService } from '@/app/services/lightbox-service';
 import { AgentService } from '@/app/services/agent-service';
+import { PropertyImageUploadComponent } from '@/app/components/property-image-upload.component/property-image-upload.component';
 
 @Component({
   selector: 'app-property-details',
   standalone: true,
-  imports: [AsyncPipe, DecimalPipe],
+  imports: [AsyncPipe, DecimalPipe, RouterLink, PropertyImageUploadComponent],
   template: `
     @if (property$ | async; as property) {
     <div class="page-container">
@@ -118,7 +119,7 @@ import { AgentService } from '@/app/services/agent-service';
   styles: [`
     .page-container { max-width: 1200px; margin: 0 auto; padding: 20px; }
 
-    .top-section { display: flex; gap: 24px; align-items: flex-start; }
+    .top-section { display: flex; gap: 24px; align-items: flex-start; flex-direction: row; }
 
     /* GALLERY */
     .gallery-container { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
@@ -162,6 +163,24 @@ import { AgentService } from '@/app/services/agent-service';
     .agents-loading { display: flex; flex-direction: column; gap: 10px; }
     .skeleton-agent { height: 72px; border-radius: 10px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
     @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    @media (max-width: 768px) {
+    .top-section {
+      flex-direction: column;  /* details go below images */
+    }
+
+    .side-panel {
+      width: 100%;             /* full width on mobile */
+    }
+
+    .hero-image img {
+      height: 240px;           /* slightly shorter hero on mobile */
+    }
+
+    .thumbnail-wrapper img {
+      height: 100px;
+    }
+  }
+
   `]
 })
 export class PropertyDetailsComponent implements OnInit {
@@ -170,29 +189,35 @@ export class PropertyDetailsComponent implements OnInit {
   private lightboxService = inject(LightboxService);
   private agentService = inject(AgentService);
   
-
+  expandedId: string | null = null;
   property$!: Observable<Property>;
   agents: Agent[] = [];
   agentsLoading = false;
 
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
-    if (id) {
-      this.property$ = this.propertyService.getPropertyById(id);
-
-      // Fetch property once to get agentIds, then fetch all agents in parallel
-      this.propertyService.getPropertyById(id).subscribe(property => {
-        this.agentsLoading = true;
-        const requests = property.agentId.map(aid => this.agentService.getAgent(aid));
-        forkJoin(requests).subscribe({
-          next: (agents) => { this.agents = agents; this.agentsLoading = false; },
-          error: () => { this.agentsLoading = false; }
-        });
-      });
-    }
+    if (!id) return;
+  
+    this.agentsLoading = true;
+    this.property$ = this.propertyService.getPropertyById(id);
+  
+    this.propertyService.getPropertyById(id).subscribe({
+      next: (property) => {
+        this.agents = property.agents ?? [];
+        this.agentsLoading = false;
+      },
+      error: () => {
+        this.agentsLoading = false;
+      }
+    });
   }
 
   openLightbox(property: Property, index: number) {
     this.lightboxService.open(property.images, index);
   }
+
+  // In my-listings.component.ts
+  toImageObjects(urls: string[]): { url: string; order: number }[] {
+    return urls.map((url, i) => ({ url, order: i }));
+}
 }

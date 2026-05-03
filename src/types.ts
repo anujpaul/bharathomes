@@ -12,6 +12,7 @@ export interface Property {
   agentId: string [];
   isFeatured?: boolean;
   expresswayProximity?: boolean;
+  agents?: Agent[];
 }
 
 export interface Agent {
@@ -46,7 +47,7 @@ export interface UserProfile {
   photo: string;
   phone?: string;
   userType?: 'buyer' | 'seller' | 'agent' | 'hybrid';
-  properttiesListed: number;
+  properttiesListed: number
   userPhoto?: string;
   provider: 'google' | 'local' | 'microsoft' | 'hybrid';
   createdAt: string;
