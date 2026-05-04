@@ -10,6 +10,7 @@ export interface Property {
   type: 'Apartment' | 'Villa' | 'Plot' | 'Commercial';
   images: string[];
   agentId: string [];
+  amenities: string[];
   isFeatured?: boolean;
   expresswayProximity?: boolean;
   agents?: Agent[];

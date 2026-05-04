@@ -11,6 +11,7 @@ import { UserProfile } from '@/types';
 export class AuthService {
 
   private readonly TOKEN_KEY = 'local_auth_token';
+  private apiUrl = `${appConfig.baseUrl}/api/auth`;
   private userReady$ = new BehaviorSubject<any | null>(null);
   private idToken: string | null = null;
   private tokenExpiry: Date | null = null;
@@ -53,7 +54,7 @@ export class AuthService {
   async signInWithEmail(email: string, password: string): Promise<void> {
       try{
         const response = await firstValueFrom(
-        this.http.post<any[]>(`${appConfig.baseUrl}/api/auth/login`, { email, password })
+        this.http.post<any[]>(`${this.apiUrl}/login`, { email, password })
       );
 
       if (!response || response.length === 0) throw new Error('Invalid credentials');
@@ -85,7 +86,7 @@ export class AuthService {
 
   async sendMergeOtp(email: string): Promise<void> {
     await firstValueFrom(
-      this.http.post(`${appConfig.baseUrl}/api/auth/send-merge-otp`, { email })
+      this.http.post(`${this.apiUrl}/send-merge-otp`, { email })
     );
   }
   
@@ -95,7 +96,7 @@ export class AuthService {
     try {
       const response = await firstValueFrom(
         this.http.post<any[]>(
-          `${appConfig.baseUrl}/api/auth/verify-merge`,
+          `${this.apiUrl}/verify-merge`,
           { email, otp, password, name }
         )
       );
@@ -127,7 +128,7 @@ export class AuthService {
     //await sendPasswordResetEmail(this.auth, email);
 
     await firstValueFrom(
-      this.http.post(`${appConfig.baseUrl}/api/auth/send-reset-otp`, {email})
+      this.http.post(`${this.apiUrl}/send-reset-otp`, {email})
     )
     console.log(`Email is ${email}`)
   }
@@ -135,7 +136,7 @@ export class AuthService {
   async verifyResetOtp(email: string, otp: string, newPassword: string): Promise<void> {
     try {
       await firstValueFrom(
-        this.http.post(`${appConfig.baseUrl}/api/auth/verify-reset`, {
+        this.http.post(`${this.apiUrl}/verify-reset`, {
           email, otp, newPassword
         })
       );
@@ -148,7 +149,7 @@ export class AuthService {
   async signUpWithEmail(name: string, email: string, password: string): Promise<{ requiresOtp: boolean }> {
     try {
       const response = await firstValueFrom(
-        this.http.post<any>(`${appConfig.baseUrl}/api/auth/register`, { name, email, password })
+        this.http.post<any>(`${this.apiUrl}/register`, { name, email, password })
       );
   
       if (response?.requiresOtp) {

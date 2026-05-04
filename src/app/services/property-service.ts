@@ -8,22 +8,19 @@ import { appConfig } from '../config/app-config';
   providedIn: 'root',
 })
 export class PropertyService {
-  
-  private baseUrl = appConfig.baseUrl;
-  
+    
   private http = inject(HttpClient);
-  private apiUrl = `${this.baseUrl}/api/property`;
+  private apiUrl = `${appConfig.baseUrl}/api/property`;
 
   getProperties(): Observable<Property[]> {
-      console.log(`Base URL : ${this.baseUrl}`);
+      console.log(`Base URL : ${this.apiUrl}`);
       return this.http.get<Property[]>(this.apiUrl);
     }
 
   getPropertyById(id: string): Observable<Property> {
-      console.log(`Get Property URL: ${this.baseUrl}/api/property/${id}`);
-      const resp= this.http.get<Property>(`${this.baseUrl}/api/property/${id}`);
+      console.log(`Get Property URL: ${this.apiUrl}/${id}`);
+      const resp= this.http.get<Property>(`${this.apiUrl}/${id}`);
       return resp;
-
     }
 
     uploadImages(propertyId: string, files: File[]): Observable<Property> {
@@ -36,10 +33,10 @@ export class PropertyService {
       );
     }
     
-    deleteImage(propertyId: string, imageUrl: string): Observable<void> {
+    deleteImage(propertyId: string, Url: string): Observable<void> {
       return this.http.delete<void>(
         `${this.apiUrl}/${propertyId}/images`,
-        { body: { imageUrl }, withCredentials: true }
+        { body: { Url }, withCredentials: true }
       );
     }
     
@@ -49,7 +46,5 @@ export class PropertyService {
         data,
         { withCredentials: true }
       );
-    }
-
-  
+    }  
 }
