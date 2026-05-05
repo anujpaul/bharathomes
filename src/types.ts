@@ -3,14 +3,18 @@ export interface Property {
   title: string;
   price: number;
   location: string;
-  city: 'Agra' | 'Noida' | 'Greater Noida';
+  city?: string;         // free text, e.g. "Noida"
+  state?: string;        // e.g. "Uttar Pradesh"
+  pincode?: string;
   beds: number;
   baths: number;
   sqft: number;
   type: 'Apartment' | 'Villa' | 'Plot' | 'Commercial';
   images: string[];
+  listerId: string;        
   agentId: string [];
   amenities: string[];
+  intents?: ('buy' | 'sell' | 'rent' | 'invest')[];
   isFeatured?: boolean;
   expresswayProximity?: boolean;
   agents?: Agent[];
@@ -48,7 +52,7 @@ export interface UserProfile {
   photo: string;
   phone?: string;
   userType?: 'buyer' | 'seller' | 'agent' | 'hybrid';
-  properttiesListed: number
+  propertiesListed: number
   userPhoto?: string;
   provider: 'google' | 'local' | 'microsoft' | 'hybrid';
   createdAt: string;

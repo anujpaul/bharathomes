@@ -11,6 +11,7 @@ import { PropertyService } from '@/app/services/property-service';
 import { AgentService } from '@/app/services/agent-service';
 import { Agent, Property } from '@/types';
 import { RouterLink } from '@angular/router';
+import { CreateProperty } from '@/app/components/create-property/create-property';
 
 @Component({
   selector: 'app-home',
@@ -20,6 +21,7 @@ import { RouterLink } from '@angular/router';
     FiltersComponent,
     PropertyCardComponent,
     AgentCardComponent,
+    // CreateProperty,
     RouterLink
 ],
   templateUrl: `./home.page.html`,

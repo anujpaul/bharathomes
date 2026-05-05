@@ -4,6 +4,7 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { appConfig } from '../config/app-config';
 
+
 @Injectable({
   providedIn: 'root',
 })
@@ -23,15 +24,26 @@ export class PropertyService {
       return resp;
     }
 
-    uploadImages(propertyId: string, files: File[]): Observable<Property> {
-      const formData = new FormData();
-      files.forEach(file => formData.append('files', file));
-      return this.http.post<Property>(
-        `${this.apiUrl}/${propertyId}/images`, 
-        formData, 
-        { withCredentials: true }
-      );
+    createProperty(payload: Omit<Property, 'id' | 'agents'>): Observable<Property> {
+      return this.http.post<Property>(`${this.apiUrl}/property`, payload);
     }
+
+    uploadImages(propertyId: string, files: File[]): Observable<string[]> {
+      console.log(`Id is : ${propertyId}`);
+      const formData = new FormData();
+      files.forEach(file => formData.append('file', file, file.name));
+      return this.http.post<string[]>(`${this.apiUrl}/${propertyId}/images`, formData);
+    }
+
+    // uploadImages(propertyId: string, files: File[]): Observable<Property> {
+    //   const formData = new FormData();
+    //   files.forEach(file => formData.append('files', file));
+    //   return this.http.post<Property>(
+    //     `${this.apiUrl}/${propertyId}/images`, 
+    //     formData, 
+    //     { withCredentials: true }
+    //   );
+    // }
     
     deleteImage(propertyId: string, Url: string): Observable<void> {
       return this.http.delete<void>(
