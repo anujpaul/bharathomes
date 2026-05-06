@@ -3,6 +3,7 @@ import { PropertyDetailsComponent } from './pages/property-details/property-deta
 import { HomePageComponent } from './pages/home/home';
 import { ProfileComponent } from './pages/profile/profile';
 import { CreateProperty } from './components/create-property/create-property';
+import { Kyc } from './components/kyc/kyc';
 // import { PropertyImageUploadComponent } from './components/property-image-upload.component/property-image-upload.component';
 
 
@@ -13,7 +14,7 @@ export const routes: Routes = [
   { path: 'property/create', component: CreateProperty },
   { path: 'property/:id', component: PropertyDetailsComponent },
   // { path: 'list', component: PropertyImageUploadComponent},
-  
   { path: 'profile', component: ProfileComponent },
+  { path: 'kyc', component: Kyc},
   { path: '**', redirectTo: '' }
 ];

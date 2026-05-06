@@ -45,13 +45,24 @@ export interface AuthResponse {
   user_id: string;
 }
 
+export type UserType     = 'buyer' | 'seller' | 'agent' | 'hybrid';
+export type KycStatus  = 'none' | 'pending' | 'submitted' | 'verified' | 'rejected';
+export type UserRole = 
+  | 'buyer'       // only browses, never lists
+  | 'owner'       // lists their own property
+  | 'agent'       // licensed broker, RERA required
+  | 'builder'     // construction company, RERA + GST required
+  | 'developer'   // real estate developer, RERA + GST required
+  | 'hybrid';     // both buyer and seller
+
 export interface UserProfile {
   id: string;
   name: string;
   email: string;
   photo: string;
   phone?: string;
-  userType?: 'buyer' | 'seller' | 'agent' | 'hybrid';
+  userType?: UserType;
+  role?: UserRole;
   propertiesListed: number
   userPhoto?: string;
   provider: 'google' | 'local' | 'microsoft' | 'hybrid';
@@ -60,4 +71,3 @@ export interface UserProfile {
   savedCount: number;
   enquiriesCount: number;
 }
-

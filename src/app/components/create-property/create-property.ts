@@ -343,6 +343,11 @@ const AMENITIES_OPTIONS = [
           }
           
         </div>
+        @if (submitError()) {
+          <div class="error-banner">
+            ⚠️ {{ submitError() }}
+          </div>
+        }
 
         <!-- FOOTER NAV -->
         <div class="form-footer">
@@ -560,6 +565,15 @@ const AMENITIES_OPTIONS = [
   .pincode-wrap .field-input { padding-right: 36px; }
   .pin-spinner { position: absolute; right: 10px; width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin 0.8s linear infinite; }
   .field-hint { font-size: 0.75rem; color: var(--muted); }
+  .error-banner {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: var(--red);
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    margin-bottom: 16px;
+  }
   `]
 })
 export class CreateProperty implements OnInit{
@@ -587,6 +601,7 @@ export class CreateProperty implements OnInit{
   cityResults = signal<string[]>([]);
   pincodeLoading = signal(false);
   pincodeError = signal('');
+  submitError = signal('');
 
   ngOnInit() {
     // Auto-fill city + state when a valid 6-digit pincode is entered
@@ -770,7 +785,7 @@ export class CreateProperty implements OnInit{
     ...this.form.value,
     images: [],                // server fills this after upload
     amenities: this.selectedAmenities(),
-    listerId: user?.id ? user.id : '',
+    // listerId: user?.id ? user.id : '',
     };
 
     // 1. Create property → 2. Upload images to its real ID → 3. Navigate
@@ -785,7 +800,31 @@ export class CreateProperty implements OnInit{
         this.submitting.set(false);
         this.router.navigate(['/property', created.id]);
       },
-      error: () => this.submitting.set(false),
+      error: (err) => {
+        this.submitting.set(false)
+        const code = err?.error?.code;
+
+        if (code === 'KYC_REQUIRED') {
+          this.router.navigate(['/kyc'], { 
+            queryParams: { returnUrl: '/property/create' } 
+          });
+          return;
+        }
+  
+        if (code === 'LISTING_LIMIT_REACHED') {
+          this.router.navigate(['/upgrade']);
+          return;
+        }
+  
+        if (code === 'ACCOUNT_TOO_NEW') {
+          this.submitError.set('New accounts must wait 24 hours before listing.');
+          return;
+        }
+  
+        // Generic fallback
+        this.submitError.set('Something went wrong. Please try again.');
+
+      },
     });
   }
 }

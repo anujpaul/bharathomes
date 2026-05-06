@@ -365,7 +365,7 @@ export class AuthService {
     );
     // Update local profile signal so UI reacts immediately
     const current = this.authResponse();
-    if (current) this.authResponse.set({ ...current, userType });
+    if (current) this.authResponse.set({ ...current, userType: userType });
   }
 
 }
