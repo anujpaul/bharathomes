@@ -217,6 +217,40 @@ import { UserRole, KycStatus } from '@/types';
                   📋 Your RERA number will be manually verified against the UP-RERA portal within 1–2 business days.
                   <a href="https://www.up-rera.in" target="_blank" class="info-link">Check UP-RERA →</a>
                 </div>
+
+                <!-- Document Upload — add inside agent @if block -->
+                <div class="field-group">
+                  <label class="field-label">RERA Certificate <span class="req">*</span></label>
+                  <div class="doc-upload-zone"
+                    [class.has-file]="uploadedDocs().length > 0"
+                    (click)="docInput.click()"
+                    (dragover)="$event.preventDefault()"
+                    (drop)="onDocDrop($event)">
+                    <input #docInput type="file" accept=".pdf,.jpg,.jpeg,.png" style="display:none"
+                      (change)="onDocSelect($event)">
+                    @if (uploadedDocs().length === 0) {
+                      <div class="doc-upload-content">
+                        <div class="doc-upload-icon">📄</div>
+                        <p class="doc-upload-label">Click or drag to upload RERA certificate</p>
+                        <p class="doc-upload-hint">PDF, JPG, PNG · Max 5MB</p>
+                      </div>
+                    } @else {
+                      <div class="doc-preview">
+                        @for (doc of uploadedDocs(); track doc.name) {
+                          <div class="doc-file">
+                            <span class="doc-file-icon">{{ doc.type === 'application/pdf' ? '📋' : '🖼️' }}</span>
+                            <span class="doc-file-name">{{ doc.name }}</span>
+                            <button type="button" class="doc-remove" (click)="removeDoc($event, doc.name)">✕</button>
+                          </div>
+                        }
+                        <p class="doc-add-more" (click)="docInput.click()">+ Add another</p>
+                      </div>
+                    }
+                  </div>
+                  @if (docError()) {
+                    <span class="error-msg">{{ docError() }}</span>
+                  }
+                </div>
               }
 
               <!-- Builder / Developer — needs RERA + GST -->
@@ -261,6 +295,41 @@ import { UserRole, KycStatus } from '@/types';
                   </div>
                 </div>
 
+                <!-- After the RERA + GST fields in builder/developer block -->
+                <div class="field-group">
+                  <label class="field-label">Business Documents <span class="req">*</span></label>
+                  <p class="field-hint" style="margin-bottom: 8px">Upload RERA certificate + GST registration certificate</p>
+                  <div class="doc-upload-zone"
+                    [class.has-file]="uploadedDocs().length > 0"
+                    (click)="docInput.click()"
+                    (dragover)="$event.preventDefault()"
+                    (drop)="onDocDrop($event)">
+                    <input #docInput type="file" accept=".pdf,.jpg,.jpeg,.png" multiple style="display:none"
+                      (change)="onDocSelect($event)">
+                    @if (uploadedDocs().length === 0) {
+                      <div class="doc-upload-content">
+                        <div class="doc-upload-icon">📁</div>
+                        <p class="doc-upload-label">Click or drag to upload documents</p>
+                        <p class="doc-upload-hint">PDF, JPG, PNG · Max 5MB each · Up to 5 files</p>
+                      </div>
+                    } @else {
+                      <div class="doc-preview">
+                        @for (doc of uploadedDocs(); track doc.name) {
+                          <div class="doc-file">
+                            <span class="doc-file-icon">{{ doc.type === 'application/pdf' ? '📋' : '🖼️' }}</span>
+                            <span class="doc-file-name">{{ doc.name }}</span>
+                            <button type="button" class="doc-remove" (click)="removeDoc($event, doc.name)">✕</button>
+                          </div>
+                        }
+                        <p class="doc-add-more" (click)="docInput.click()">+ Add more</p>
+                      </div>
+                    }
+                  </div>
+                  @if (docError()) { <span class="error-msg">{{ docError() }}</span> }
+                </div>
+
+
+
                 <div class="info-box">
                   📋 RERA and GST will be verified manually within 1–2 business days. 
                   You'll receive an email at <strong>{{ userEmail() }}</strong> once approved.
@@ -268,6 +337,8 @@ import { UserRole, KycStatus } from '@/types';
               }
 
             </div>
+
+            
           }
 
           <!-- ERROR BANNER -->
@@ -411,6 +482,19 @@ import { UserRole, KycStatus } from '@/types';
     .btn-primary { display: inline-block; margin-top: 20px; padding: 11px 28px; background: var(--blue); color: #fff; border-radius: 10px; font-weight: 700; text-decoration: none; font-size: 0.9rem; border: none; cursor: pointer; }
     .btn-secondary { display: inline-block; margin-top: 20px; padding: 11px 28px; background: #f0f0f0; color: #444; border-radius: 10px; font-weight: 700; text-decoration: none; font-size: 0.9rem; }
     .btn-spinner { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; }
+    .doc-upload-zone { border: 2px dashed var(--border); border-radius: 10px; padding: 24px; cursor: pointer; transition: all 0.2s; }
+    .doc-upload-zone:hover, .doc-upload-zone.has-file { border-color: var(--blue); background: var(--blue-light); }
+    .doc-upload-content { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+    .doc-upload-icon { font-size: 1.8rem; }
+    .doc-upload-label { font-size: 0.88rem; color: #444; margin: 0; }
+    .doc-upload-hint { font-size: 0.75rem; color: var(--muted); margin: 0; }
+    .doc-preview { display: flex; flex-direction: column; gap: 8px; }
+    .doc-file { display: flex; align-items: center; gap: 10px; background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; }
+    .doc-file-icon { font-size: 1.1rem; }
+    .doc-file-name { flex: 1; font-size: 0.85rem; color: var(--navy); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .doc-remove { background: none; border: none; color: var(--red); cursor: pointer; font-size: 0.8rem; padding: 2px 6px; border-radius: 4px; }
+    .doc-remove:hover { background: #fef2f2; }
+    .doc-add-more { font-size: 0.78rem; color: var(--blue); cursor: pointer; margin: 4px 0 0; font-weight: 600; }
 
     @media (max-width: 600px) {
       .role-grid { grid-template-columns: 1fr; }
@@ -451,6 +535,9 @@ export class Kyc implements OnInit {
   returnUrl = signal('/property/create');
   userEmail = signal('');
   rejectionReason = signal('');
+
+  uploadedDocs = signal<File[]>([]);
+  docError = signal('');
 
   form: FormGroup = this.fb.group({
     role:        ['', Validators.required],
@@ -580,26 +667,32 @@ export class Kyc implements OnInit {
   // ── Submit ────────────────────────────────────────────────────────────
   onSubmit() {
     this.form.markAllAsTouched();
-
     const role = this.selectedRole();
+  
+    // Require at least one document for non-owners
+    if (role !== 'owner' && this.uploadedDocs().length === 0) {
+      this.docError.set('Please upload at least one document.');
+      return;
+    }
+  
     const fieldsToCheck = ['reraNumber', 'gstNumber', 'companyName'];
-    const anyInvalid = fieldsToCheck.some(f => this.form.get(f)?.invalid);
-    if (anyInvalid) return;
-
+    if (fieldsToCheck.some(f => this.form.get(f)?.invalid)) return;
+  
     this.submitting.set(true);
     this.submitError.set('');
-
-    const payload = {
-      role,
-      pan: this.form.get('pan')?.value,
-      name: this.form.get('name')?.value,
-      reraNumber: this.form.get('reraNumber')?.value || null,
-      reraState: this.form.get('reraState')?.value || null,
-      gstNumber: this.form.get('gstNumber')?.value || null,
-      companyName: this.form.get('companyName')?.value || null,
-    };
-
-    this.http.post(`${this.apiUrl}/kyc/submit`, payload).subscribe({
+  
+    // Use FormData so files can be sent alongside text fields
+    const formData = new FormData();
+    formData.append('role', role);
+    formData.append('pan', this.form.get('pan')?.value);
+    formData.append('name', this.form.get('name')?.value);
+    if (this.form.get('reraNumber')?.value) formData.append('reraNumber', this.form.get('reraNumber')?.value);
+    if (this.form.get('reraState')?.value)  formData.append('reraState',  this.form.get('reraState')?.value);
+    if (this.form.get('gstNumber')?.value)  formData.append('gstNumber',  this.form.get('gstNumber')?.value);
+    if (this.form.get('companyName')?.value) formData.append('companyName', this.form.get('companyName')?.value);
+    this.uploadedDocs().forEach(f => formData.append('documents', f, f.name));
+  
+    this.http.post(`${this.apiUrl}/kyc/submit`, formData).subscribe({
       next: () => {
         this.submitting.set(false);
         this.kycStatus.set('submitted');
@@ -610,5 +703,36 @@ export class Kyc implements OnInit {
         this.submitError.set(err?.error?.message ?? 'Submission failed. Please try again.');
       }
     });
+  }
+
+  onDocSelect(e: Event) {
+    const input = e.target as HTMLInputElement;
+    if (!input.files?.length) return;
+    this.addDocs(Array.from(input.files));
+    input.value = '';
+  }
+  
+  onDocDrop(e: DragEvent) {
+    e.preventDefault();
+    const files = Array.from(e.dataTransfer?.files ?? []);
+    this.addDocs(files);
+  }
+  
+  private addDocs(files: File[]) {
+    const allowed = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+    const valid = files.filter(f => allowed.includes(f.type) && f.size <= 5 * 1024 * 1024);
+  
+    if (valid.length !== files.length)
+      this.docError.set('Some files were skipped. Only PDF/JPG/PNG under 5MB allowed.');
+    else
+      this.docError.set('');
+  
+    const remaining = 5 - this.uploadedDocs().length;
+    this.uploadedDocs.update(docs => [...docs, ...valid.slice(0, remaining)]);
+  }
+  
+  removeDoc(e: Event, name: string) {
+    e.stopPropagation();
+    this.uploadedDocs.update(docs => docs.filter(d => d.name !== name));
   }
 }
