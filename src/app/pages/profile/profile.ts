@@ -88,7 +88,7 @@ const USER_TYPES = [
                 <button
                   type="button"
                   (click)="setUserType(type.value)"
-                  [class.selected]="editModel.userType === type.value"
+                  [class.selected]="editModel.userRole === type.value"
                   class="type-option">
                   <span>{{ type.icon }}</span>
                   <span>{{ type.label }}</span>
@@ -193,7 +193,7 @@ export class ProfileComponent {
   
   userTypes = USER_TYPES;
 
-  editModel: Partial<UserProfile> = { name: '', email: '', phone: '', userType: undefined };
+  editModel: Partial<UserProfile> = { name: '', email: '', phone: '', userRole: undefined };
 
   openPreview() { this.showPreview.set(true); }
   closePreview() { this.showPreview.set(false); }
@@ -219,12 +219,12 @@ export class ProfileComponent {
   }
 
   setUserType(value: string) {
-    this.editModel.userType = value as UserProfile['userType'];
+    this.editModel.userRole = value as UserProfile['userRole'];
   }
 
   startEdit() {
     const p = this.profile();
-    this.editModel = { name: p?.name, email: p?.email, phone: p?.phone, userType: p?.userType };
+    this.editModel = { name: p?.name, email: p?.email, phone: p?.phone, userRole: p?.userRole };
     this.isEditing.set(true);
   }
 
@@ -236,7 +236,7 @@ export class ProfileComponent {
   }
 
   get currentUserType() {
-    return USER_TYPES.find(t => t.value === this.profile()?.userType);
+    return USER_TYPES.find(t => t.value === this.profile()?.userRole);
   }
   
 }

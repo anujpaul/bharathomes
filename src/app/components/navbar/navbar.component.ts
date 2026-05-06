@@ -222,7 +222,7 @@ async signUp() {
   showUserTypeModal = computed(() => {
     const profile = this.authService.authResponse();
     const user = this.authService.user();
-    return !!user && !!profile && !profile.userType;
+    return !!user && !!profile && !profile.userRole;
   });
 
   onUserTypeSelected(type: string) {

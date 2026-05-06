@@ -45,8 +45,8 @@ export interface AuthResponse {
   user_id: string;
 }
 
-export type UserType     = 'buyer' | 'seller' | 'agent' | 'hybrid';
-export type KycStatus  = 'none' | 'pending' | 'submitted' | 'verified' | 'rejected';
+// export type UserType     = 'buyer' | 'seller' | 'agent' | 'hybrid';
+export type KycStatus  = 'pending' | 'submitted' | 'verified' | 'rejected';
 export type UserRole = 
   | 'buyer'       // only browses, never lists
   | 'owner'       // lists their own property
@@ -61,9 +61,9 @@ export interface UserProfile {
   email: string;
   photo: string;
   phone?: string;
-  userType?: UserType;
-  role?: UserRole;
-  propertiesListed: number
+  userRole?: UserRole;
+  propertiesListed: number;
+  kycStatus: number;
   userPhoto?: string;
   provider: 'google' | 'local' | 'microsoft' | 'hybrid';
   createdAt: string;

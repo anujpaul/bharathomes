@@ -359,13 +359,13 @@ export class AuthService {
       this.router.navigate(['/']);
     }
   }
-  async updateUserType(userType: UserProfile['userType']): Promise<void> {
+  async updateUserType(userType: UserProfile['userRole']): Promise<void> {
     await firstValueFrom(
       this.http.patch(`${appConfig.baseUrl}/api/user/type`, { userType })
     );
     // Update local profile signal so UI reacts immediately
     const current = this.authResponse();
-    if (current) this.authResponse.set({ ...current, userType: userType });
+    if (current) this.authResponse.set({ ...current, userRole: userType });
   }
 
 }

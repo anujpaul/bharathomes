@@ -7,7 +7,7 @@ import { AuthService } from '@/app/services/auth.service';
 import { appConfig } from '@/app/config/app-config';
 import { UserRole, KycStatus } from '@/types';
 
-// type KycStatus = 'none' | 'pending' | 'submitted' | 'verified' | 'rejected';
+// type KycStatus = 'pending' | 'pending' | 'submitted' | 'verified' | 'rejected';
 // type UserRole = 'owner' | 'agent' | 'builder' | 'developer';
 
 @Component({
@@ -42,12 +42,12 @@ import { UserRole, KycStatus } from '@/types';
           <div class="status-icon">❌</div>
           <h2>Verification Failed</h2>
           <p>{{ rejectionReason() || 'Your documents could not be verified. Please resubmit.' }}</p>
-          <button class="btn-primary" (click)="kycStatus.set('none')">Resubmit Documents</button>
+          <button class="btn-primary" (click)="kycStatus.set('pending')">Resubmit Documents</button>
         </div>
       }
 
       <!-- MAIN KYC FORM -->
-      @if (kycStatus() === 'none' || kycStatus() === 'pending') {
+      @if (kycStatus() === 'pending' || kycStatus() === 'pending') {
 
         <div class="kyc-header animate-in">
           <div class="kyc-badge">🪪 Identity Verification</div>
@@ -441,7 +441,7 @@ export class Kyc implements OnInit {
   ];
 
   kycStep = signal(1);
-  kycStatus = signal<KycStatus>('none');
+  kycStatus = signal<KycStatus>('pending');
   selectedRole = signal<UserRole>('owner');
   panVerifying = signal(false);
   panVerified = signal(false);
@@ -471,7 +471,7 @@ export class Kyc implements OnInit {
     // Load current KYC status from backend
     this.http.get<any>(`${this.apiUrl}/kyc/status`).subscribe({
       next: (res) => {
-        this.kycStatus.set(res.status ?? 'none');
+        this.kycStatus.set(res.status ?? 'pending');
         this.userEmail.set(res.email ?? '');
         this.rejectionReason.set(res.rejectionReason ?? '');
       }

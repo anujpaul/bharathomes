@@ -79,18 +79,18 @@ export class UserTypeModalComponent {
   authService = inject(AuthService);
 
   userTypes = USER_TYPES;
-  selected :UserProfile['userType'] = undefined;
+  selected :UserProfile['userRole'] = undefined;
   isLoading = false;
   errorMessage = '';
 
   done = output<string>(); // emits the chosen type to parent
 
-  select(value: UserProfile['userType']) {
+  select(value: UserProfile['userRole']) {
     this.selected = value;
   }
 
   selectType(value: string) {
-    this.selected = value as UserProfile['userType'];
+    this.selected = value as UserProfile['userRole'];
   }
 
   async confirm() {
@@ -101,7 +101,7 @@ export class UserTypeModalComponent {
       await this.authService.updateUserType(this.selected);
       this.done.emit(this.selected);
     } catch(err) {
-      console.error('❌ updateUserType threw:', err);
+      console.error('❌ updateUserRole threw:', err);
       this.errorMessage = 'Something went wrong, please try again';
     } finally {
       console.log('🏁 finally ran');
