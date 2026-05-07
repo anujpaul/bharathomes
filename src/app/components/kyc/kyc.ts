@@ -23,7 +23,7 @@ import { UserRole, KycStatus } from '@/types';
           <div class="status-icon">✅</div>
           <h2>Identity Verified</h2>
           <p>Your KYC is complete. You can now list properties on BharatHomes.</p>
-          <a [routerLink]="returnUrl()" class="btn-primary">Continue to Listing →</a>
+          <a [routerLink]="returnUrl" class="btn-primary">Continue to Listing →</a>
         </div>
       }
 
@@ -532,7 +532,7 @@ export class Kyc implements OnInit {
   panError = signal('');
   submitting = signal(false);
   submitError = signal('');
-  returnUrl = signal('/property/create');
+  returnUrl = '/property/create';
   userEmail = signal('');
   rejectionReason = signal('');
 
@@ -552,7 +552,10 @@ export class Kyc implements OnInit {
   ngOnInit() {
     // Grab returnUrl from query params
     this.route.queryParams.subscribe(p => {
-      if (p['returnUrl']) this.returnUrl.set(p['returnUrl']);
+      if (p['returnUrl']) {
+        console.log("Return URL ");
+        this.returnUrl = p['returnUrl'];
+      }
     });
 
     // Load current KYC status from backend

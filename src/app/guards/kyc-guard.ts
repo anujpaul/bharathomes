@@ -13,7 +13,7 @@ export const kycGuard: CanActivateFn = (route, state) => {
     return router.parseUrl('/');
   }
 
-  if (user.kycStatus === 2) {
+  if (user.kycStatus === 'verified') {
     console.log(`User is a KYC Verified `);
     return true;
   }

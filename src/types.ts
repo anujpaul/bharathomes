@@ -63,7 +63,7 @@ export interface UserProfile {
   phone?: string;
   userRole?: UserRole;
   propertiesListed: number;
-  kycStatus: number;
+  kycStatus: KycStatus;
   userPhoto?: string;
   provider: 'google' | 'local' | 'microsoft' | 'hybrid';
   createdAt: string;
