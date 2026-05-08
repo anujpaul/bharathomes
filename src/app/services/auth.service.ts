@@ -21,6 +21,18 @@ export class AuthService {
 
   user = signal<any | null>(null);
   authResponse = signal<UserProfile | null>(null);
+  // Shared signal so any component can request the navbar's auth modal to open
+  authModalRequest = signal<'signin' | 'signup' | null>(null);
+
+  requestAuthModal(mode: 'signin' | 'signup' = 'signin'): void {
+    // Set to null first so consecutive requests with the same mode still trigger the effect
+    this.authModalRequest.set(null);
+    queueMicrotask(() => this.authModalRequest.set(mode));
+  }
+
+  isAuthenticated(): boolean {
+    return !!this.user();
+  }
 
   // Constructor stays empty — app.config.ts APP_INITIALIZER calls checkSession()
   constructor() {}

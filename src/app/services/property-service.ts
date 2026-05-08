@@ -24,7 +24,7 @@ export class PropertyService {
       return resp;
     }
 
-    createProperty(payload: Omit<Property, 'id' | 'agents'>): Observable<Property> {
+    createProperty(payload: Omit<Property, 'id' | 'agents' | 'listerId' | 'agentId' >): Observable<Property> {
       return this.http.post<Property>(`${this.apiUrl}/property`, payload);
     }
 
@@ -59,4 +59,10 @@ export class PropertyService {
         { withCredentials: true }
       );
     }  
+
+    uploadReraDoc(propertyId: string, file: File): Observable<void> {
+      const formData = new FormData();
+      formData.append('file', file, file.name);
+      return this.http.post<void>(`${this.apiUrl}/${propertyId}/rera-doc`, formData);
+    }
 }

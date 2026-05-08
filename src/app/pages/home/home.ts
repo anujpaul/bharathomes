@@ -9,8 +9,9 @@ import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { PropertyDetailsComponent } from '../property-details/property-details';
 import { PropertyService } from '@/app/services/property-service';
 import { AgentService } from '@/app/services/agent-service';
+import { AuthService } from '@/app/services/auth.service';
 import { Agent, Property } from '@/types';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { CreateProperty } from '@/app/components/create-property/create-property';
 
 @Component({
@@ -31,6 +32,8 @@ export class HomePageComponent implements OnInit {
 
 private propertyService = inject(PropertyService);
   private agentService = inject(AgentService);
+  private authService = inject(AuthService);
+  private router = inject(Router);
   
   searchQuery = signal('');
   selectedCity = signal('All Cities');
@@ -108,6 +111,14 @@ private propertyService = inject(PropertyService);
     this.selectedCity.set('All Cities');
     this.selectedType.set('All Types');
     this.priceRange.set([0, 50000000]);
+  }
+
+  startListing() {
+    if (this.authService.isAuthenticated()) {
+      this.router.navigate(['/property/create']);
+    } else {
+      this.authService.requestAuthModal('signin');
+    }
   }
 
   // setSearchQuery(query: string) {

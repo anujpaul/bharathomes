@@ -17,7 +17,59 @@
       <div class="hidden md:flex items-center gap-8">
         <a href="#" class="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">Buy</a>
         <a href="#" class="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">Rent</a>
-        <a href="#" class="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">Sell</a>
+
+        <!-- List Property dropdown -->
+        <div class="relative">
+          <button
+            type="button"
+            (click)="toggleListMenu(); $event.stopPropagation()"
+            class="flex items-center gap-1 text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors cursor-pointer">
+            List Property
+            <svg class="w-3.5 h-3.5 transition-transform" [class.rotate-180]="isListMenuOpen()"
+                 viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd"
+                    d="M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z"
+                    clip-rule="evenodd" />
+            </svg>
+          </button>
+
+          @if (isListMenuOpen()) {
+            <div class="absolute top-full right-0 mt-3 w-80 bg-white rounded-2xl border border-gray-100 shadow-xl p-2 z-50"
+                 (click)="$event.stopPropagation()">
+
+              <button type="button" (click)="startListing('sell')"
+                      class="group w-full text-left flex items-start gap-3 p-3 rounded-xl hover:bg-blue-50 transition-colors">
+                <div class="text-2xl flex-shrink-0">🏷️</div>
+                <div class="min-w-0">
+                  <div class="text-sm font-bold text-gray-900 group-hover:text-blue-700">List for Sale</div>
+                  <p class="text-xs text-gray-500 mt-0.5 leading-snug">
+                    Reach lakhs of serious buyers across UP. Sell your home, plot, or commercial space in weeks, not months.
+                  </p>
+                </div>
+              </button>
+
+              <button type="button" (click)="startListing('rent')"
+                      class="group w-full text-left flex items-start gap-3 p-3 rounded-xl hover:bg-blue-50 transition-colors mt-1">
+                <div class="text-2xl flex-shrink-0">🔑</div>
+                <div class="min-w-0">
+                  <div class="flex items-center gap-2">
+                    <div class="text-sm font-bold text-gray-900 group-hover:text-blue-700">List for Rent</div>
+                    <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-full uppercase tracking-wide">Earn monthly</span>
+                  </div>
+                  <p class="text-xs text-gray-500 mt-0.5 leading-snug">
+                    Turn your spare apartment, PG, or floor into steady rental income. Verified tenants. Zero brokerage.
+                  </p>
+                </div>
+              </button>
+
+              <div class="border-t border-gray-100 my-1"></div>
+              <p class="px-3 py-2 text-[11px] text-gray-400">
+                Free for owners · KYC verified · Listings live in minutes
+              </p>
+            </div>
+          }
+        </div>
+
         <a href="#" class="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">Agents</a>
       </div>
 
@@ -57,11 +109,35 @@
 
   <!-- Mobile menu -->
   @if (isMenuOpen) {
-    <div class="md:hidden bg-white border-b border-gray-100 px-4 py-4 space-y-4">
+    <div class="md:hidden bg-white border-b border-gray-100 px-4 py-4 space-y-3">
       <a href="#" class="block text-sm font-medium text-gray-700 hover:text-blue-600">Buy</a>
       <a href="#" class="block text-sm font-medium text-gray-700 hover:text-blue-600">Rent</a>
-      <a href="#" class="block text-sm font-medium text-gray-700 hover:text-blue-600">Sell</a>
-      <a href="#" class="block text-sm font-medium text-gray-700 hover:text-blue-600">Agents</a>
+
+      <!-- List Property — expanded inline on mobile -->
+      <div class="space-y-2">
+        <p class="text-[11px] font-bold uppercase tracking-wider text-gray-400 mt-2">List your property</p>
+        <button type="button" (click)="startListing('sell')"
+                class="w-full text-left flex items-start gap-3 p-2.5 rounded-lg bg-gray-50 hover:bg-blue-50">
+          <span class="text-lg flex-shrink-0">🏷️</span>
+          <span class="min-w-0">
+            <span class="block text-sm font-semibold text-gray-900">List for Sale</span>
+            <span class="block text-xs text-gray-500 leading-snug mt-0.5">Reach buyers across UP — sell faster.</span>
+          </span>
+        </button>
+        <button type="button" (click)="startListing('rent')"
+                class="w-full text-left flex items-start gap-3 p-2.5 rounded-lg bg-gray-50 hover:bg-blue-50">
+          <span class="text-lg flex-shrink-0">🔑</span>
+          <span class="min-w-0">
+            <span class="flex items-center gap-2">
+              <span class="block text-sm font-semibold text-gray-900">List for Rent</span>
+              <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-full uppercase">Earn monthly</span>
+            </span>
+            <span class="block text-xs text-gray-500 leading-snug mt-0.5">Turn your spare home into rental income.</span>
+          </span>
+        </button>
+      </div>
+
+      <a href="#" class="block text-sm font-medium text-gray-700 hover:text-blue-600 pt-2">Agents</a>
       <hr class="border-gray-100">
       @if (authService.user()) {
         <a [routerLink]="['/profile']" class="block text-sm font-medium text-gray-700">

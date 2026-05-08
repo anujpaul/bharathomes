@@ -131,7 +131,7 @@
             <div class="flex flex-col sm:flex-row justify-center gap-4">
                 
                     <button
-                        [routerLink]="['/property/create']"
+                        (click)="startListing()"
                         class="bg-white text-blue-600 px-8 py-4 rounded-2xl font-black hover:bg-blue-50 transition-colors shadow-lg">
                         Start Listing Now
                     </button>

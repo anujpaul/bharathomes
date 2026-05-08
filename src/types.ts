@@ -65,9 +65,20 @@ export interface UserProfile {
   propertiesListed: number;
   kycStatus: KycStatus;
   userPhoto?: string;
+  isPaid: boolean;
   provider: 'google' | 'local' | 'microsoft' | 'hybrid';
   createdAt: string;
   savedPropertyIds: string[];
   savedCount: number;
   enquiriesCount: number;
 }
+
+export type VastuOrientation =
+  | 'North'
+  | 'South'
+  | 'East'
+  | 'West'
+  | 'NorthEast'
+  | 'NorthWest'
+  | 'SouthEast'
+  | 'SouthWest';

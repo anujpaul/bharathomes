@@ -1,7 +1,7 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, ElementRef, HostListener, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LucideAngularModule, Home, Search, Menu, X } from 'lucide-angular';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '@/app/services/auth.service';
 import { UserTypeModalComponent } from '../user-type-modal/user-type-modal.component';
 
@@ -12,6 +12,7 @@ import { UserTypeModalComponent } from '../user-type-modal/user-type-modal.compo
   templateUrl: './navbar.component.html'
 })
 export class NavbarComponent {
+
 
   loginUrl = '/.auth/login/google?post_login_redirect_uri=/';
   logoutUrl = '/.auth/logout?post_login_redirect_uri=/';
@@ -43,6 +44,55 @@ export class NavbarComponent {
   confirmNewPassword = signal('');
 
   authService = inject(AuthService);
+  private router = inject(Router);
+  private host: ElementRef<HTMLElement> = inject(ElementRef);
+
+  // Desktop "List Property" dropdown
+  isListMenuOpen = signal(false);
+
+  constructor() {
+    // Listen for global requests to open the auth modal (e.g. from the home page)
+    effect(() => {
+      const requested = this.authService.authModalRequest();
+      if (requested) {
+        this.openAuthModal(requested);
+        this.authService.authModalRequest.set(null);
+      }
+    });
+  }
+
+  /**
+   * Entry point for "List for Sale" / "List for Rent" CTAs in the navbar.
+   * If the user isn't signed in we pop the auth modal; otherwise we navigate
+   * to the create-property page with the listing intent preselected.
+   */
+  startListing(intent: 'sell' | 'rent' = 'sell') {
+    this.isListMenuOpen.set(false);
+    this.isMenuOpen = false;
+
+    if (this.authService.isAuthenticated()) {
+      this.router.navigate(['/property/create'], { queryParams: { intent } });
+    } else {
+      this.authService.requestAuthModal('signin');
+    }
+  }
+
+  toggleListMenu() { this.isListMenuOpen.update(v => !v); }
+
+  // Close the dropdown when the user clicks anywhere outside the navbar
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(ev: MouseEvent) {
+    if (!this.isListMenuOpen()) return;
+    if (!this.host.nativeElement.contains(ev.target as Node)) {
+      this.isListMenuOpen.set(false);
+    }
+  }
+
+  // Close on Escape too
+  @HostListener('document:keydown.escape')
+  onEscape() {
+    this.isListMenuOpen.set(false);
+  }
 
   toggleMenu() { this.isMenuOpen = !this.isMenuOpen; }
   

@@ -1,20 +1,20 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   ReactiveFormsModule,
   FormBuilder,
   FormGroup,
   Validators,
-  FormArray,
 } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { PropertyService } from '@/app/services/property-service';
 import { AuthService } from '@/app/services/auth.service';
-import { debounceTime, filter, map, switchMap } from 'rxjs';
+import { debounceTime, filter, forkJoin, map, switchMap } from 'rxjs';
+import { VastuOrientation } from '@/types';
 
 const AMENITIES_OPTIONS = [
   'Swimming Pool', 'Gym', 'Parking', 'Security', 'Power Backup',
-  'Lift', 'Garden', 'Clubhouse', 'Children\'s Play Area', 'CCTV',
+  'Lift', 'Garden', 'Clubhouse', "Children's Play Area", 'CCTV',
   'Intercom', 'Water Supply', 'Gas Pipeline', 'Modular Kitchen', 'Terrace',
 ];
 
@@ -53,106 +53,208 @@ const AMENITIES_OPTIONS = [
         <div class="form-body">
 
           <!-- ───────────── STEP 1: BASICS ───────────── -->
-          @if (currentStep() === 1) {          <!-- ← ADD THIS WRAPPER -->
-    <div class="form-card animate-in">
-      <div class="card-header">
-        <div class="card-icon">🏠</div>
-        <div>
-          <h2 class="card-title">Property Basics</h2>
-          <p class="card-desc">Start with the key details of your listing</p>
-        </div>
-      </div>
+          @if (currentStep() === 1) {
+            <div class="form-card animate-in">
+              <div class="card-header">
+                <div class="card-icon">🏠</div>
+                <div>
+                  <h2 class="card-title">Property Basics</h2>
+                  <p class="card-desc">Start with the key details of your listing</p>
+                </div>
+              </div>
 
-      <!-- INTENT -->
-      <div class="field-group">
-        <label class="field-label">Listing Intent <span class="required">*</span></label>
-        <div class="pill-group">
-          <button type="button" class="pill" [class.selected]="form.get('listingIntent')?.value === 'sell'"
-            (click)="form.get('listingIntent')?.setValue('sell')">🏷️ Sell</button>
-          <button type="button" class="pill" [class.selected]="form.get('listingIntent')?.value === 'rent'"
-            (click)="form.get('listingIntent')?.setValue('rent')">🔑 Rent / Lease</button>
-        </div>
-      </div>
+              <!-- INTENT -->
+              <div class="field-group">
+                <label class="field-label">Listing Intent <span class="required">*</span></label>
+                <div class="pill-group">
+                  <button type="button" class="pill" [class.selected]="form.get('listingIntent')?.value === 'sell'"
+                    (click)="form.get('listingIntent')?.setValue('sell')">🏷️ Sell</button>
+                  <button type="button" class="pill" [class.selected]="form.get('listingIntent')?.value === 'rent'"
+                    (click)="form.get('listingIntent')?.setValue('rent')">🔑 Rent / Lease</button>
+                </div>
+              </div>
 
-      <div class="two-col">
-        <div class="field-group">
-          <label class="field-label">Property Type <span class="required">*</span></label>
-          <div class="pill-group">
-            @for (t of propertyTypes; track t) {
-              <button type="button" class="pill" [class.selected]="form.get('type')?.value === t"
-                (click)="form.get('type')?.setValue(t)">{{ typeIcon(t) }} {{ t }}</button>
-            }
-          </div>
-          @if (isInvalid('type')) { <span class="error-msg">Please select a type</span> }
-        </div>
+              <div class="two-col">
+                <div class="field-group">
+                  <label class="field-label">Property Type <span class="required">*</span></label>
+                  <div class="pill-group">
+                    @for (t of propertyTypes; track t) {
+                      <button type="button" class="pill" [class.selected]="form.get('type')?.value === t"
+                        (click)="form.get('type')?.setValue(t)">{{ typeIcon(t) }} {{ t }}</button>
+                    }
+                  </div>
+                  @if (isInvalid('type')) { <span class="error-msg">Please select a type</span> }
+                </div>
 
-        <div class="field-group">
-          <label class="field-label">Pincode</label>
-          <div class="pincode-wrap">
-            <input class="field-input" formControlName="pincode" type="text" maxlength="6" placeholder="e.g. 201301">
-            @if (pincodeLoading()) { <span class="pin-spinner"></span> }
-          </div>
-          @if (pincodeError()) {
-            <span class="error-msg">{{ pincodeError() }}</span>
-          } @else {
-            <span class="field-hint">Auto-fills city & state</span>
+                <div class="field-group">
+                  <label class="field-label">Pincode</label>
+                  <div class="pincode-wrap">
+                    <input class="field-input" formControlName="pincode" type="text" maxlength="6" placeholder="e.g. 201301">
+                    @if (pincodeLoading()) { <span class="pin-spinner"></span> }
+                  </div>
+                  @if (pincodeError()) {
+                    <span class="error-msg">{{ pincodeError() }}</span>
+                  } @else {
+                    <span class="field-hint">Auto-fills city &amp; state</span>
+                  }
+                </div>
+              </div>
+
+              <div class="two-col">
+                <div class="field-group">
+                  <label class="field-label">City <span class="required">*</span></label>
+                  <input class="field-input" [class.invalid]="isInvalid('city')"
+                    formControlName="city" type="text" placeholder="e.g. Noida">
+                  @if (isInvalid('city')) { <span class="error-msg">City is required</span> }
+                </div>
+                <div class="field-group">
+                  <label class="field-label">State</label>
+                  <input class="field-input" formControlName="state" type="text" placeholder="e.g. Uttar Pradesh">
+                </div>
+              </div>
+
+              <div class="field-group">
+                <label class="field-label">Locality / Area <span class="required">*</span></label>
+                <input class="field-input" [class.invalid]="isInvalid('location')"
+                  formControlName="location" type="text" placeholder="e.g. Sector 150, Noida Expressway">
+                @if (isInvalid('location')) { <span class="error-msg">Location is required</span> }
+              </div>
+
+              <div class="field-group">
+                <label class="field-label">Listing Title <span class="required">*</span></label>
+                <input class="field-input" [class.invalid]="isInvalid('title')"
+                  formControlName="title" type="text"
+                  placeholder="e.g. Luxury 4BHK Penthouse with Pool View">
+                @if (isInvalid('title')) { <span class="error-msg">Title is required (min 10 characters)</span> }
+              </div>
+
+              <!-- TOGGLES -->
+              <div class="toggle-row">
+
+                <!-- FEATURED — locked behind isPaid -->
+                <div class="toggle-item" [class.locked]="!isPaid" (click)="onFeaturedClick()">
+                  <div class="toggle-switch" [class.on]="form.get('isFeatured')?.value && isPaid">
+                    <div class="toggle-thumb"></div>
+                  </div>
+                  <div>
+                    <div class="toggle-label">
+                      ⭐ Featured Listing
+                      @if (!isPaid) {
+                        <span class="lock-badge">🔒 Pro</span>
+                      }
+                    </div>
+                    <div class="toggle-hint">
+                      {{ isPaid ? 'Appear in premium placements' : 'Upgrade to unlock featured listings' }}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- EXPRESSWAY -->
+                <div class="toggle-item" (click)="toggle('expresswayProximity')">
+                  <div class="toggle-switch" [class.on]="form.get('expresswayProximity')?.value">
+                    <div class="toggle-thumb"></div>
+                  </div>
+                  <div>
+                    <div class="toggle-label">🛣️ Expressway Proximity</div>
+                    <div class="toggle-hint">Near Noida / Yamuna Expressway</div>
+                  </div>
+                </div>
+
+                <!-- RERA REGISTERED -->
+                <div class="toggle-item" (click)="toggle('isReraRegistered')">
+                  <div class="toggle-switch" [class.on]="form.get('isReraRegistered')?.value">
+                    <div class="toggle-thumb"></div>
+                  </div>
+                  <div>
+                    <div class="toggle-label">🏛️ RERA Registered</div>
+                    <div class="toggle-hint">Project registered under RERA</div>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- RERA PANEL — expands when toggle is ON -->
+              @if (form.get('isReraRegistered')?.value) {
+                <div class="rera-panel animate-in">
+                  <div class="rera-panel-header">
+                    <span class="rera-icon">🏛️</span>
+                    <div>
+                      <div class="rera-title">RERA Registration Details</div>
+                      <div class="rera-subtitle">Enter the number exactly as on your certificate</div>
+                    </div>
+                  </div>
+
+                  <div class="field-group">
+                    <label class="field-label">
+                      RERA Registration Number <span class="required">*</span>
+                    </label>
+                    <input class="field-input"
+                      [class.invalid]="isInvalid('reraRegistrationNumber')"
+                      formControlName="reraRegistrationNumber"
+                      type="text"
+                      placeholder="e.g. UPRERAPRJ12345">
+                    @if (isInvalid('reraRegistrationNumber')) {
+                      <span class="error-msg">RERA number is required</span>
+                    }
+                    <span class="field-hint">
+                      Verify at
+                      <a href="https://up-rera.in/" target="_blank" class="rera-verify-link">
+                        up-rera.in ↗
+                      </a>
+                    </span>
+                  </div>
+
+                  <!-- RERA CERTIFICATE UPLOAD -->
+                  <div class="field-group">
+                    <label class="field-label">
+                      RERA Certificate
+                      <span class="muted-label">(optional reference copy)</span>
+                    </label>
+                    @if (reraDoc()) {
+                      <div class="rera-doc-preview">
+                        <span class="rera-doc-icon">📄</span>
+                        <div class="rera-doc-info">
+                          <span class="rera-doc-name">{{ reraDoc()!.file.name }}</span>
+                          <span class="rera-doc-size">{{ (reraDoc()!.file.size / 1024).toFixed(0) }} KB</span>
+                        </div>
+                        <button type="button" class="rera-doc-remove" (click)="reraDoc.set(null)">✕ Remove</button>
+                      </div>
+                    } @else {
+                      <label class="rera-upload-zone">
+                        <input type="file" accept=".pdf,.jpg,.png" style="display:none"
+                          (change)="onReraDocSelect($event)">
+                        <span class="rera-upload-icon">📎</span>
+                        <span class="rera-upload-text">Upload certificate</span>
+                        <span class="rera-upload-hint">PDF, JPG or PNG · Max 5 MB</span>
+                      </label>
+                    }
+                  </div>
+                </div>
+              }
+
+              <!-- VASTU ORIENTATION -->
+              <div class="field-group" style="margin-top: 18px">
+                <label class="field-label">Vastu Orientation</label>
+                <div class="pill-group">
+                  @for (dir of vastuDirections; track dir.value) {
+                    <button type="button" class="pill"
+                      [class.selected]="form.get('vastuOrientation')?.value === dir.value"
+                      (click)="form.get('vastuOrientation')?.setValue(dir.value)">
+                      {{ dir.icon }} {{ dir.label }}
+                    </button>
+                  }
+                  <button type="button" class="pill"
+                    [class.selected]="!form.get('vastuOrientation')?.value"
+                    (click)="form.get('vastuOrientation')?.setValue('')">
+                    — Not specified
+                  </button>
+                </div>
+                <span class="field-hint">Facing direction of the main entrance</span>
+              </div>
+
+            </div>
           }
-        </div>
-      </div>
 
-      <div class="two-col">
-        <div class="field-group">
-          <label class="field-label">City <span class="required">*</span></label>
-          <input class="field-input" [class.invalid]="isInvalid('city')"
-            formControlName="city" type="text" placeholder="e.g. Noida">
-          @if (isInvalid('city')) { <span class="error-msg">City is required</span> }
-        </div>
-        <div class="field-group">
-          <label class="field-label">State</label>
-          <input class="field-input" formControlName="state" type="text" placeholder="e.g. Uttar Pradesh">
-        </div>
-      </div>
-
-      <div class="field-group">
-        <label class="field-label">Locality / Area <span class="required">*</span></label>
-        <input class="field-input" [class.invalid]="isInvalid('location')"
-          formControlName="location" type="text" placeholder="e.g. Sector 150, Noida Expressway">
-        @if (isInvalid('location')) { <span class="error-msg">Location is required</span> }
-      </div>
-
-      <!-- Title inside step 1 card -->
-      <div class="field-group">
-        <label class="field-label">Listing Title <span class="required">*</span></label>
-        <input class="field-input" [class.invalid]="isInvalid('title')"
-          formControlName="title" type="text"
-          placeholder="e.g. Luxury 4BHK Penthouse with Pool View">
-        @if (isInvalid('title')) { <span class="error-msg">Title is required (min 10 characters)</span> }
-      </div>
-
-      <div class="toggle-row">
-        <div class="toggle-item" (click)="toggle('isFeatured')">
-          <div class="toggle-switch" [class.on]="form.get('isFeatured')?.value">
-            <div class="toggle-thumb"></div>
-          </div>
-          <div>
-            <div class="toggle-label">⭐ Featured Listing</div>
-            <div class="toggle-hint">Appear in premium placements</div>
-          </div>
-        </div>
-        <div class="toggle-item" (click)="toggle('expresswayProximity')">
-          <div class="toggle-switch" [class.on]="form.get('expresswayProximity')?.value">
-            <div class="toggle-thumb"></div>
-          </div>
-          <div>
-            <div class="toggle-label">🛣️ Expressway Proximity</div>
-            <div class="toggle-hint">Near Noida / Yamuna Expressway</div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  }
-            
           <!-- ───────────── STEP 2: DETAILS ───────────── -->
           @if (currentStep() === 2) {
             <div class="form-card animate-in">
@@ -210,7 +312,6 @@ const AMENITIES_OPTIONS = [
                 </div>
               </div>
 
-              <!-- PRICE PER SQFT CALLOUT -->
               @if (form.get('price')?.value && form.get('sqft')?.value) {
                 <div class="insight-card">
                   <span class="insight-icon">💡</span>
@@ -238,7 +339,7 @@ const AMENITIES_OPTIONS = [
             </div>
           }
 
-          <!-- ───────────── STEP 3: IMAGES ───────────── -->
+          <!-- ───────────── STEP 3: PHOTOS ───────────── -->
           @if (currentStep() === 3) {
             <div class="form-card animate-in">
               <div class="card-header">
@@ -249,7 +350,6 @@ const AMENITIES_OPTIONS = [
                 </div>
               </div>
 
-              <!-- DROP ZONE -->
               <div class="drop-zone"
                 [class.drag-over]="isDragging()"
                 (dragover)="onDragOver($event)"
@@ -265,13 +365,12 @@ const AMENITIES_OPTIONS = [
                 } @else {
                   <div class="drop-content">
                     <div class="drop-icon">📁</div>
-                    <p class="drop-label">Drag & drop images here or <span class="drop-link">browse</span></p>
+                    <p class="drop-label">Drag &amp; drop images here or <span class="drop-link">browse</span></p>
                     <p class="drop-hint">JPG, PNG, WEBP · Up to 10 images · Max 5MB each</p>
                   </div>
                 }
               </div>
 
-              <!-- PREVIEW GRID -->
               @if (previewImages().length > 0) {
                 <div class="preview-grid">
                   @for (img of previewImages(); track img.url; let i = $index) {
@@ -338,11 +437,24 @@ const AMENITIES_OPTIONS = [
                   <span class="summary-label">Intent</span>
                   <span class="summary-val">{{ form.get('listingIntent')?.value === 'rent' ? '🔑 Rent / Lease' : '🏷️ For Sale' }}</span>
                 </div>
+                <div class="summary-item">
+                  <span class="summary-label">RERA</span>
+                  <span class="summary-val">
+                    {{ form.get('isReraRegistered')?.value
+                        ? '🏛️ ' + (form.get('reraRegistrationNumber')?.value || 'Number pending')
+                        : '—' }}
+                  </span>
+                </div>
+                <div class="summary-item">
+                  <span class="summary-label">Vastu</span>
+                  <span class="summary-val">{{ form.get('vastuOrientation')?.value || '—' }}</span>
+                </div>
               </div>
             </div>
           }
-          
+
         </div>
+
         @if (submitError()) {
           <div class="error-banner">
             ⚠️ {{ submitError() }}
@@ -372,9 +484,9 @@ const AMENITIES_OPTIONS = [
             }
           </div>
         </div>
-        
+
       </form>
-            
+
     </div>
   `,
   styles: [`
@@ -390,6 +502,7 @@ const AMENITIES_OPTIONS = [
       --bg: #f5f7fa;
       --red: #dc2626;
       --green: #16a34a;
+      --amber: #f59e0b;
       --radius: 12px;
       --shadow: 0 2px 16px rgba(0,0,0,0.07);
     }
@@ -442,12 +555,14 @@ const AMENITIES_OPTIONS = [
     .field-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
     .field-label { font-size: 0.78rem; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 0.05em; }
     .required { color: var(--red); margin-left: 2px; }
+    .muted-label { color: var(--muted); font-weight: 400; text-transform: none; font-size: 0.75rem; margin-left: 4px; }
     .field-input {
       padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 8px;
       font-size: 0.95rem; outline: none; transition: border-color 0.15s; width: 100%; box-sizing: border-box;
     }
     .field-input:focus { border-color: var(--blue); }
     .field-input.invalid { border-color: var(--red); }
+    .field-hint { font-size: 0.75rem; color: var(--muted); }
     .error-msg { font-size: 0.78rem; color: var(--red); }
 
     /* PREFIX INPUT */
@@ -476,12 +591,61 @@ const AMENITIES_OPTIONS = [
     .toggle-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 4px; }
     .toggle-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border: 1px solid var(--border); border-radius: 10px; cursor: pointer; flex: 1; min-width: 220px; transition: border-color 0.15s; }
     .toggle-item:hover { border-color: var(--blue); }
+    .toggle-item.locked { opacity: 0.78; }
+    .toggle-item.locked:hover { border-color: var(--amber); }
     .toggle-switch { width: 40px; height: 22px; border-radius: 11px; background: #ddd; position: relative; transition: background 0.2s; flex-shrink: 0; }
     .toggle-switch.on { background: var(--blue); }
     .toggle-thumb { width: 18px; height: 18px; border-radius: 50%; background: #fff; position: absolute; top: 2px; left: 2px; transition: left 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
     .toggle-switch.on .toggle-thumb { left: 20px; }
     .toggle-label { font-size: 0.88rem; font-weight: 600; color: var(--navy); }
     .toggle-hint { font-size: 0.75rem; color: var(--muted); }
+    .lock-badge {
+      display: inline-block; font-size: 0.68rem; font-weight: 700;
+      background: #fef3c7; color: #92400e;
+      border: 1px solid #fcd34d; border-radius: 10px;
+      padding: 1px 7px; margin-left: 6px; vertical-align: middle;
+      letter-spacing: 0.03em;
+    }
+
+    /* ── RERA PANEL ───────────────────────────────── */
+    .rera-panel {
+      margin-top: 16px; padding: 20px;
+      background: #f0fdf4; border: 1.5px solid #86efac;
+      border-radius: 10px;
+    }
+    .rera-panel-header { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 18px; }
+    .rera-icon { font-size: 1.4rem; }
+    .rera-title { font-size: 0.92rem; font-weight: 700; color: #14532d; }
+    .rera-subtitle { font-size: 0.78rem; color: #16a34a; margin-top: 2px; }
+    .rera-verify-link { color: #16a34a; font-weight: 600; text-decoration: none; }
+    .rera-verify-link:hover { text-decoration: underline; }
+
+    /* RERA DOC PREVIEW */
+    .rera-doc-preview {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px; background: #fff;
+      border: 1.5px solid #86efac; border-radius: 8px;
+    }
+    .rera-doc-icon { font-size: 1.4rem; }
+    .rera-doc-info { display: flex; flex-direction: column; flex: 1; }
+    .rera-doc-name { font-size: 0.88rem; font-weight: 600; color: var(--navy); }
+    .rera-doc-size { font-size: 0.75rem; color: var(--muted); }
+    .rera-doc-remove {
+      padding: 5px 10px; border-radius: 6px; border: 1px solid #fca5a5;
+      background: #fef2f2; color: var(--red); font-size: 0.78rem;
+      cursor: pointer; font-weight: 500; white-space: nowrap;
+    }
+
+    /* RERA UPLOAD ZONE */
+    .rera-upload-zone {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      padding: 20px; border: 2px dashed #86efac; border-radius: 8px;
+      cursor: pointer; transition: background 0.15s; background: #fff;
+    }
+    .rera-upload-zone:hover { background: #dcfce7; }
+    .rera-upload-icon { font-size: 1.4rem; }
+    .rera-upload-text { font-size: 0.88rem; color: #16a34a; font-weight: 600; }
+    .rera-upload-hint { font-size: 0.75rem; color: var(--muted); }
 
     /* ── COUNTER ─────────────────────────────────── */
     .counter-control { display: flex; align-items: center; gap: 0; border: 1.5px solid var(--border); border-radius: 8px; overflow: hidden; }
@@ -529,7 +693,6 @@ const AMENITIES_OPTIONS = [
     /* ── SUMMARY ─────────────────────────────────── */
     .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
     .summary-item { padding: 10px 0; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 2px; padding-right: 16px; }
-    .summary-item:nth-child(odd) { padding-right: 16px; }
     .summary-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
     .summary-val { font-size: 0.9rem; color: var(--navy); font-weight: 500; }
 
@@ -553,58 +716,104 @@ const AMENITIES_OPTIONS = [
     .btn-submit:hover:not(:disabled) { opacity: 0.9; }
     .btn-spinner { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; }
 
+    /* ── ERROR BANNER ────────────────────────────── */
+    .error-banner {
+      background: #fef2f2; border: 1px solid #fecaca;
+      color: var(--red); padding: 12px 16px;
+      border-radius: 8px; font-size: 0.88rem; margin-bottom: 16px;
+    }
+
+    /* ── PINCODE ─────────────────────────────────── */
+    .pincode-wrap { position: relative; display: flex; align-items: center; }
+    .pincode-wrap .field-input { padding-right: 36px; }
+    .pin-spinner { position: absolute; right: 10px; width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin 0.8s linear infinite; }
+
     /* ── RESPONSIVE ──────────────────────────────── */
     @media (max-width: 600px) {
       .two-col, .three-col { grid-template-columns: 1fr; }
       .summary-grid { grid-template-columns: 1fr; }
       .step-name { display: none; }
       .step-line { min-width: 16px; }
+      .toggle-item { min-width: 100%; }
     }
-    /* PINCODE */
-  .pincode-wrap { position: relative; display: flex; align-items: center; }
-  .pincode-wrap .field-input { padding-right: 36px; }
-  .pin-spinner { position: absolute; right: 10px; width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin 0.8s linear infinite; }
-  .field-hint { font-size: 0.75rem; color: var(--muted); }
-  .error-banner {
-    background: #fef2f2;
-    border: 1px solid #fecaca;
-    color: var(--red);
-    padding: 12px 16px;
-    border-radius: 8px;
-    font-size: 0.88rem;
-    margin-bottom: 16px;
-  }
   `]
 })
-export class CreateProperty implements OnInit{
-  private fb = inject(FormBuilder);
-  private router = inject(Router);
+export class CreateProperty implements OnInit {
+  private fb             = inject(FormBuilder);
+  private router         = inject(Router);
+  private route          = inject(ActivatedRoute);
   private propertyService = inject(PropertyService);
-  private authService = inject(AuthService);
+  private authService    = inject(AuthService);
 
-  readonly propertyTypes = ['Apartment', 'Villa', 'Plot', 'Commercial'] as const;
-  readonly cities = ['Agra', 'Noida', 'Greater Noida'] as const;
+  readonly propertyTypes   = ['Apartment', 'Villa', 'Plot', 'Commercial'] as const;
   readonly amenitiesOptions = AMENITIES_OPTIONS;
 
   readonly steps = [
-    { id: 1, label: 'Basics' },
+    { id: 1, label: 'Basics'  },
     { id: 2, label: 'Details' },
-    { id: 3, label: 'Photos' },
+    { id: 3, label: 'Photos'  },
   ];
 
-  currentStep = signal(1);
-  isDragging = signal(false);
-  uploading = signal(false);
-  submitting = signal(false);
-  previewImages = signal<{ url: string; file: File }[]>([]);
-  selectedAmenities = signal<string[]>([]);
-  cityResults = signal<string[]>([]);
-  pincodeLoading = signal(false);
-  pincodeError = signal('');
-  submitError = signal('');
+  readonly vastuDirections: { value: VastuOrientation; icon: string; label: string }[] = [
+    { value: 'North',     icon: '⬆️', label: 'North'      },
+    { value: 'South',     icon: '⬇️', label: 'South'      },
+    { value: 'East',      icon: '➡️', label: 'East'       },
+    { value: 'West',      icon: '⬅️', label: 'West'       },
+    { value: 'NorthEast', icon: '↗️', label: 'North-East' },
+    { value: 'NorthWest', icon: '↖️', label: 'North-West' },
+    { value: 'SouthEast', icon: '↘️', label: 'South-East' },
+    { value: 'SouthWest', icon: '↙️', label: 'South-West' },
+  ];
 
+  // ── Signals ────────────────────────────────────────────────────────────
+  currentStep      = signal(1);
+  isDragging       = signal(false);
+  uploading        = signal(false);
+  submitting       = signal(false);
+  previewImages    = signal<{ url: string; file: File }[]>([]);
+  selectedAmenities = signal<string[]>([]);
+  pincodeLoading   = signal(false);
+  pincodeError     = signal('');
+  submitError      = signal('');
+  reraDoc          = signal<{ url: string; file: File } | null>(null);
+
+  // ── Computed helpers ───────────────────────────────────────────────────
+  get isPaid(): boolean {
+    return !!this.authService.authResponse()?.isPaid;
+  }
+
+  // ── Form ───────────────────────────────────────────────────────────────
+  form: FormGroup = this.fb.group({
+    // Step 1 — Basics
+    title:                  ['', [Validators.required, Validators.minLength(10)]],
+    type:                   ['', Validators.required],
+    listingIntent:          ['sell', Validators.required],
+    city:                   ['', Validators.required],
+    state:                  [''],
+    pincode:                ['', [Validators.pattern(/^\d{6}$/)]],
+    location:               ['', Validators.required],
+    isFeatured:             [false],
+    expresswayProximity:    [false],
+    isReraRegistered:       [false],
+    reraRegistrationNumber: [''],
+    vastuOrientation:       ['' as VastuOrientation | ''],
+
+    // Step 2 — Details
+    price: [null, [Validators.required, Validators.min(1)]],
+    sqft:  [null, [Validators.required, Validators.min(1)]],
+    beds:  [2,    [Validators.required, Validators.min(0)]],
+    baths: [2,    [Validators.required, Validators.min(0)]],
+  });
+
+  // ── Lifecycle ──────────────────────────────────────────────────────────
   ngOnInit() {
-    // Auto-fill city + state when a valid 6-digit pincode is entered
+    // Preselect listing intent if navbar sent us here with ?intent=rent|sell
+    const intent = this.route.snapshot.queryParamMap.get('intent');
+    if (intent === 'rent' || intent === 'sell') {
+      this.form.get('listingIntent')?.setValue(intent);
+    }
+
+    // Auto-fill city + state from pincode
     this.form.get('pincode')!.valueChanges.pipe(
       debounceTime(600),
       filter(v => /^\d{6}$/.test(v))
@@ -616,10 +825,7 @@ export class CreateProperty implements OnInit{
         .then(data => {
           const po = data?.[0]?.PostOffice?.[0];
           if (po) {
-            this.form.patchValue({
-              city: po.Division || po.District,
-              state: po.State,
-            });
+            this.form.patchValue({ city: po.Division || po.District, state: po.State });
             this.pincodeError.set('');
           } else {
             this.pincodeError.set('Pincode not found');
@@ -631,33 +837,24 @@ export class CreateProperty implements OnInit{
           this.pincodeLoading.set(false);
         });
     });
+
+    // Clear RERA number when toggle is switched off
+    this.form.get('isReraRegistered')!.valueChanges.subscribe(val => {
+      if (!val) {
+        this.form.get('reraRegistrationNumber')?.reset('');
+        this.reraDoc.set(null);
+      }
+    });
   }
 
-  form: FormGroup = this.fb.group({
-    title:               ['', [Validators.required, Validators.minLength(10)]],
-    type:                ['', Validators.required],
-    listingIntent:       ['sell', Validators.required],   // ← NEW: sell | rent
-    city:                ['', Validators.required],
-    state:               [''],                            // ← NEW: auto-filled
-    pincode:             ['', [Validators.pattern(/^\d{6}$/)]],  // ← NEW
-    location:            ['', Validators.required],
-    price:               [null, [Validators.required, Validators.min(1)]],
-    sqft:                [null, [Validators.required, Validators.min(1)]],
-    beds:                [2, [Validators.required, Validators.min(0)]],
-    baths:               [2, [Validators.required, Validators.min(0)]],
-    isFeatured:          [false],
-    expresswayProximity: [false],
-  });
-
-  // ── Helpers ──────────────────────────────────────────────────────────
-
+  // ── Field helpers ──────────────────────────────────────────────────────
   isInvalid(field: string): boolean {
     const ctrl = this.form.get(field);
     return !!(ctrl?.invalid && ctrl?.touched);
   }
 
   typeIcon(t: string): string {
-    return { Apartment: '🏢', Villa: '🏡', Plot: '🗺️', Commercial: '🏗️' }[t] ?? '';
+    return ({ Apartment: '🏢', Villa: '🏡', Plot: '🗺️', Commercial: '🏗️' } as Record<string, string>)[t] ?? '';
   }
 
   toCrore(val: number): string {
@@ -669,7 +866,7 @@ export class CreateProperty implements OnInit{
 
   pricePerSqft(): number {
     const p = this.form.get('price')?.value ?? 0;
-    const s = this.form.get('sqft')?.value ?? 1;
+    const s = this.form.get('sqft')?.value  ?? 1;
     return s ? p / s : 0;
   }
 
@@ -688,8 +885,16 @@ export class CreateProperty implements OnInit{
     if ((ctrl?.value ?? 0) > 0) ctrl?.setValue(ctrl.value - 1);
   }
 
-  // ── Amenities ─────────────────────────────────────────────────────────
+  // ── Featured (paid gate) ───────────────────────────────────────────────
+  onFeaturedClick() {
+    if (!this.isPaid) {
+      this.router.navigate(['/upgrade']);
+      return;
+    }
+    this.toggle('isFeatured');
+  }
 
+  // ── Amenities ──────────────────────────────────────────────────────────
   isAmenitySelected(a: string): boolean {
     return this.selectedAmenities().includes(a);
   }
@@ -701,28 +906,34 @@ export class CreateProperty implements OnInit{
     );
   }
 
-  // ── Navigation ────────────────────────────────────────────────────────
-
+  // ── Navigation ─────────────────────────────────────────────────────────
   goToStep(id: number) {
     if (id < this.currentStep()) this.currentStep.set(id);
   }
 
   nextStep() {
     const step = this.currentStep();
+
     if (step === 1) {
-      this.form.get('title')?.markAsTouched();
-      this.form.get('type')?.markAsTouched();
-      this.form.get('city')?.markAsTouched();
-      this.form.get('location')?.markAsTouched();
-      const invalid = ['title', 'type', 'listingIntent', 'city', 'location'].some(f => this.form.get(f)?.invalid);
+      ['title', 'type', 'city', 'location'].forEach(f => this.form.get(f)?.markAsTouched());
+
+      // If RERA toggle is on, also validate the reg number
+      if (this.form.get('isReraRegistered')?.value) {
+        this.form.get('reraRegistrationNumber')?.markAsTouched();
+        if (!this.form.get('reraRegistrationNumber')?.value?.trim()) return;
+      }
+
+      const invalid = ['title', 'type', 'listingIntent', 'city', 'location'].some(
+        f => this.form.get(f)?.invalid
+      );
       if (invalid) return;
     }
+
     if (step === 2) {
-      this.form.get('price')?.markAsTouched();
-      this.form.get('sqft')?.markAsTouched();
-      const invalid = ['price', 'sqft'].some(f => this.form.get(f)?.invalid);
-      if (invalid) return;
+      ['price', 'sqft'].forEach(f => this.form.get(f)?.markAsTouched());
+      if (['price', 'sqft'].some(f => this.form.get(f)?.invalid)) return;
     }
+
     this.currentStep.set(step + 1);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -732,12 +943,8 @@ export class CreateProperty implements OnInit{
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // ── Image Handling ────────────────────────────────────────────────────
-
-  onDragOver(e: DragEvent) {
-    e.preventDefault();
-    this.isDragging.set(true);
-  }
+  // ── Image handling ─────────────────────────────────────────────────────
+  onDragOver(e: DragEvent) { e.preventDefault(); this.isDragging.set(true); }
 
   onDrop(e: DragEvent) {
     e.preventDefault();
@@ -754,8 +961,7 @@ export class CreateProperty implements OnInit{
   }
 
   private addPreviews(files: File[]) {
-    const remaining = 10 - this.previewImages().length;
-    const toAdd = files.slice(0, remaining);
+    const toAdd = files.slice(0, 10 - this.previewImages().length);
     toAdd.forEach(file => {
       const reader = new FileReader();
       reader.onload = ev => {
@@ -769,8 +975,20 @@ export class CreateProperty implements OnInit{
     this.previewImages.update(imgs => imgs.filter((_, i) => i !== index));
   }
 
-  // ── Submit ────────────────────────────────────────────────────────────
+  // ── RERA document ──────────────────────────────────────────────────────
+  onReraDocSelect(e: Event) {
+    const input = e.target as HTMLInputElement;
+    const file  = input.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      this.reraDoc.set({ url: ev.target!.result as string, file });
+    };
+    reader.readAsDataURL(file);
+    input.value = '';
+  }
 
+  // ── Submit ─────────────────────────────────────────────────────────────
   onSubmit() {
     if (this.form.invalid || this.previewImages().length === 0) {
       this.form.markAllAsTouched();
@@ -778,52 +996,66 @@ export class CreateProperty implements OnInit{
     }
 
     this.submitting.set(true);
-    const user = this.authService.authResponse();
-    const files = this.previewImages().map(p => p.file);
+    this.submitError.set('');
 
+    const v = this.form.value;
+
+    // Build payload that matches PropertyDetailsDto / CreatePropertyDto
     const payload = {
-    ...this.form.value,
-    images: [],                // server fills this after upload
-    amenities: this.selectedAmenities(),
-    // listerId: user?.id ? user.id : '',
+      title:                  v.title,
+      type:                   v.type,
+      listingIntent:          v.listingIntent,   // confirm if your CreatePropertyDto has this
+      city:                   v.city,
+      location:               v.location,
+      price:                  v.price,
+      sqft:                   v.sqft,
+      beds:                   v.beds,
+      baths:                  v.baths,
+      isFeatured:             this.isPaid && v.isFeatured,
+      expresswayProximity:    v.expresswayProximity,
+      isReraRegistered:       v.isReraRegistered,
+      reraRegistrationNumber: v.isReraRegistered ? (v.reraRegistrationNumber ?? null) : null,
+      vastuOrientation:       v.vastuOrientation || null,
+      amenities:              this.selectedAmenities(),
+      images:                 [],   // filled server-side after upload
     };
 
-    // 1. Create property → 2. Upload images to its real ID → 3. Navigate
+    const imageFiles = this.previewImages().map(p => p.file);
+
     this.propertyService.createProperty(payload).pipe(
-      switchMap(created =>
-        this.propertyService.uploadImages(created.id, files).pipe(
-          map(() => created)
-        )
-      )
+      switchMap(created => {
+        const uploads = [
+          this.propertyService.uploadImages(created.id, imageFiles),
+          ...(this.reraDoc()
+            ? [this.propertyService.uploadReraDoc(created.id, this.reraDoc()!.file)]
+            : []),
+        ];
+        return forkJoin(uploads).pipe(map(() => created));
+      })
     ).subscribe({
       next: (created) => {
         this.submitting.set(false);
         this.router.navigate(['/property', created.id]);
       },
       error: (err) => {
-        this.submitting.set(false)
+        this.submitting.set(false);
         const code = err?.error?.code;
 
         if (code === 'KYC_REQUIRED') {
-          this.router.navigate(['/kyc'], { 
-            queryParams: { returnUrl: '/property/create' } 
+          this.router.navigate(['/kyc'], { queryParams: { returnUrl: '/property/create' } });
+          return;
+        }
+        if (code === 'LISTING_LIMIT_REACHED') {
+          this.router.navigate(['/upgrade'], {
+            queryParams: { reason: 'limit', returnUrl: '/property/create' }
           });
           return;
         }
-  
-        if (code === 'LISTING_LIMIT_REACHED') {
-          this.router.navigate(['/upgrade']);
-          return;
-        }
-  
         if (code === 'ACCOUNT_TOO_NEW') {
           this.submitError.set('New accounts must wait 24 hours before listing.');
           return;
         }
-  
-        // Generic fallback
         this.submitError.set('Something went wrong. Please try again.');
-
       },
     });
   }
