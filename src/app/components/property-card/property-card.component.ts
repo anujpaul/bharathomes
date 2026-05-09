@@ -4,11 +4,12 @@ import { LucideAngularModule, Bed, Bath, Square, MapPin, Star } from 'lucide-ang
 import { Property } from '../../../types';
 import { LightboxService } from '../../services/lightbox-service';
 import { RouterLink } from '@angular/router';
+import { InrPricePipe } from '@/app/pipes/inr-price.pipe';
 
 @Component({
   selector: 'app-property-card',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule, RouterLink],
+  imports: [CommonModule, LucideAngularModule, RouterLink, InrPricePipe],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   template: `
     <div class="group bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300">
@@ -81,7 +82,7 @@ import { RouterLink } from '@angular/router';
 
         <div class="flex items-center justify-between">
           <div class="text-2xl font-black text-gray-900">
-            {{formatCurrency(property.price)}}
+            {{ property.price | inrPrice }}
           </div>
           <a [routerLink]="['/property', property.id]"
             class="bg-gray-900 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-blue-600 transition-colors">
@@ -109,13 +110,5 @@ export class PropertyCardComponent {
   
   openLightbox(index: number) {
     this.lightbox.open(this.property.images, index);
-  }
-
-  formatCurrency(amount: number): string {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0,
-    }).format(amount);
   }
 }

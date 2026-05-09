@@ -11,12 +11,13 @@
         (reset)="resetFilters()"
     ></app-filters> -->
 
-    <app-filters 
+    <app-filters
         [selectedCity]="selectedCity()"
         (selectedCityChange)="selectedCity.set($event)"
         [selectedType]="selectedType()"
         (selectedTypeChange)="selectedType.set($event)"
         [priceRange]="priceRange()"
+        [priceMax]="priceCeiling()"
         (priceRangeChange)="priceRange.set($event)"
         (reset)="resetFilters()"
     ></app-filters>

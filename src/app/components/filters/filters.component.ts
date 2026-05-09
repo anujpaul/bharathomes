@@ -2,11 +2,12 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LucideAngularModule, Filter, ChevronDown } from 'lucide-angular';
 import { FormsModule } from '@angular/forms';
+import { InrPricePipe } from '@/app/pipes/inr-price.pipe';
 
 @Component({
   selector: 'app-filters',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule, FormsModule],
+  imports: [CommonModule, LucideAngularModule, FormsModule, InrPricePipe],
   template: `
     <div class="bg-white border-b border-gray-100 sticky top-16 z-40 py-4 shadow-sm">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -47,14 +48,18 @@ import { FormsModule } from '@angular/forms';
             <input
               type="range"
               min="0"
-              max="50000000"
+              [max]="priceMax"
               step="1000000"
               [ngModel]="priceRange[1]"
               (ngModelChange)="onPriceChange($event)"
               class="w-32 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
             />
             <span class="text-sm font-bold text-gray-700">
-              Up to ₹{{(priceRange[1] / 10000000).toFixed(1)}}Cr
+              @if (priceRange[1] >= priceMax) {
+                Up to Any
+              } @else {
+                Up to {{ priceRange[1] | inrPrice:1 }}
+              }
             </span>
           </div>
 
@@ -78,6 +83,13 @@ export class FiltersComponent {
   
   @Input() priceRange: [number, number] = [0, 50000000];
   @Output() priceRangeChange = new EventEmitter<[number, number]>();
+
+  /**
+   * Upper bound of the slider, in INR. Driven by the parent so it can grow
+   * with the actual data — e.g. if someone lists an 8 Cr property, the parent
+   * pushes priceMax up so the slider can reach (and surface) it.
+   */
+  @Input() priceMax: number = 50_000_000;
   
   @Output() reset = new EventEmitter<void>();
 

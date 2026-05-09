@@ -9,11 +9,12 @@ import { AgentService } from '@/app/services/agent-service';
 import { PropertyImageUploadComponent } from '@/app/components/property-image-upload.component/property-image-upload.component';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '@/app/services/auth.service';
+import { InrPricePipe } from '@/app/pipes/inr-price.pipe';
 
 @Component({
   selector: 'app-property-details',
   standalone: true,
-  imports: [AsyncPipe, DecimalPipe, RouterLink, FormsModule],
+  imports: [AsyncPipe, DecimalPipe, RouterLink, FormsModule, InrPricePipe],
   template: `
     @if (property$ | async; as property) {
     <div class="page-container">
@@ -76,7 +77,7 @@ import { AuthService } from '@/app/services/auth.service';
           @if (editMode) {
             <input class="edit-input price-input" type="number" [(ngModel)]="editData.price" (ngModelChange)="pendingChanges = true" placeholder="Price">
           } @else {
-            <div class="price-tag">₹ {{ property.price | number:'1.0-0' }}</div>
+            <div class="price-tag">{{ property.price | inrPrice }}</div>
           }
 
           <!-- Editable title -->

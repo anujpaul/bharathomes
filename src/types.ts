@@ -66,6 +66,10 @@ export interface UserProfile {
   kycStatus: KycStatus;
   userPhoto?: string;
   isPaid: boolean;
+  subscriptionExpiry?: string | null;
+  subscriptionStartedAt?: string | null;
+  currentPlanCode?: string | null;          // e.g. 'pro_yearly'
+  currentPlanTier?: 'basic' | 'pro' | null;
   provider: 'google' | 'local' | 'microsoft' | 'hybrid';
   createdAt: string;
   savedPropertyIds: string[];

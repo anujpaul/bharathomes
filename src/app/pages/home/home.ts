@@ -35,15 +35,34 @@ private propertyService = inject(PropertyService);
   private authService = inject(AuthService);
   private router = inject(Router);
   
+  // 1 Cr in INR — keeps the magic numbers below readable.
+  private static readonly ONE_CR = 10_000_000;
+  // Floor for the price slider: 10 Cr. Even with no listings, the slider
+  // shouldn't max out at something tiny like 1 Cr.
+  private static readonly PRICE_CEILING_FLOOR = 10 * HomePageComponent.ONE_CR;
+
   searchQuery = signal('');
   selectedCity = signal('All Cities');
   selectedType = signal('All Types');
-  priceRange = signal<[number, number]>([0, 50000000]);
+  // Upper bound starts at the floor; bumped up in ngOnInit once listings load.
+  priceRange = signal<[number, number]>([0, HomePageComponent.PRICE_CEILING_FLOOR]);
 
   // agents = AGENTS;
 
   private allProperties = signal<Property[]>([]);
   agents = signal<Agent[]>([]);
+
+  /**
+   * Dynamic max for the price-range slider. Always at least the floor (10 Cr),
+   * but rounds up to the next crore above the most expensive listing in the
+   * dataset so newly added high-value properties (e.g. 8 Cr, 25 Cr) don't get
+   * filtered out by a stale hardcoded ceiling.
+   */
+  priceCeiling = computed(() => {
+    const max = this.allProperties().reduce((m, p) => Math.max(m, p.price), 0);
+    const roundedUp = Math.ceil(max / HomePageComponent.ONE_CR) * HomePageComponent.ONE_CR;
+    return Math.max(HomePageComponent.PRICE_CEILING_FLOOR, roundedUp);
+  });
 
   // get filteredProperties(): Property[] {
   //   return PROPERTIES.filter((p) => {
@@ -67,15 +86,18 @@ private propertyService = inject(PropertyService);
     const city = this.selectedCity();
     const type = this.selectedType();
     const maxPrice = this.priceRange()[1];
+    // When the slider sits at the dynamic ceiling, treat it as "no upper bound"
+    // so listings that happen to be above the ceiling at any moment still show.
+    const noUpperBound = maxPrice >= this.priceCeiling();
 
     return this.allProperties().filter((p) => {
-      const matchesSearch = query === '' || 
+      const matchesSearch = query === '' ||
         p.title.toLowerCase().includes(query) ||
         p.location.toLowerCase().includes(query);
-      
+
       const matchesCity = city === 'All Cities' || p.city === city;
       const matchesType = type === 'All Types' || p.type === type;
-      const matchesPrice = p.price <= maxPrice;
+      const matchesPrice = noUpperBound || p.price <= maxPrice;
 
       return matchesSearch && matchesCity && matchesType && matchesPrice;
     });
@@ -90,6 +112,15 @@ private propertyService = inject(PropertyService);
     this.propertyService.getProperties().subscribe({
       next: (data: Property[]) => {
         this.allProperties.set(data);
+        // Bump the slider's upper bound to the new ceiling — but only if the
+        // user is still parked at the previous ceiling (i.e. they haven't
+        // narrowed the range). Stops the slider from snapping out from under
+        // them mid-interaction.
+        const ceiling = this.priceCeiling();
+        const [lo, hi] = this.priceRange();
+        if (hi < ceiling && hi <= HomePageComponent.PRICE_CEILING_FLOOR) {
+          this.priceRange.set([lo, ceiling]);
+        }
       },
       error: (err) => console.error('Property API Error:', err)
     });
@@ -110,7 +141,8 @@ private propertyService = inject(PropertyService);
     this.searchQuery.set('');
     this.selectedCity.set('All Cities');
     this.selectedType.set('All Types');
-    this.priceRange.set([0, 50000000]);
+    // Reset to "Any" — the top of whatever the current dynamic ceiling is.
+    this.priceRange.set([0, this.priceCeiling()]);
   }
 
   startListing() {
