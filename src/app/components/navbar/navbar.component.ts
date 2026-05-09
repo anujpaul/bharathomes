@@ -1,8 +1,9 @@
 import { Component, computed, effect, ElementRef, HostListener, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { LucideAngularModule, Home, Search, Menu, X } from 'lucide-angular';
+import { LucideAngularModule, Home, Search, Menu, X, Sun, Moon } from 'lucide-angular';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '@/app/services/auth.service';
+import { ThemeService } from '@/app/services/theme.service';
 import { UserTypeModalComponent } from '../user-type-modal/user-type-modal.component';
 
 @Component({
@@ -20,6 +21,8 @@ export class NavbarComponent {
   SearchIcon = Search;
   MenuIcon = Menu;
   CloseIcon = X;
+  SunIcon = Sun;
+  MoonIcon = Moon;
   confirmPassword = signal('');
 
   showOtpStep = signal(false);
@@ -44,6 +47,7 @@ export class NavbarComponent {
   confirmNewPassword = signal('');
 
   authService = inject(AuthService);
+  themeService = inject(ThemeService);
   private router = inject(Router);
   private host: ElementRef<HTMLElement> = inject(ElementRef);
 

@@ -1,4 +1,4 @@
-<nav class="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
+<nav class="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex justify-between items-center h-16">
 
@@ -7,23 +7,23 @@
         <div class="bg-blue-600 p-2 rounded-lg">
           <lucide-icon [name]="HomeIcon" class="w-6 h-6 text-white"></lucide-icon>
         </div>
-        <span class="text-xl font-bold tracking-tight text-gray-900">
-          Bharat<span class="text-blue-600">Homes</span>
-          <span class="ml-1 text-xs font-medium text-gray-400 uppercase tracking-widest">UP</span>
+        <span class="text-xl font-bold tracking-tight text-gray-900 dark:text-white">
+          Bharat<span class="text-blue-600 dark:text-blue-400">Homes</span>
+          <span class="ml-1 text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-widest">UP</span>
         </span>
       </a>
 
       <!-- Desktop nav links -->
       <div class="hidden md:flex items-center gap-8">
-        <a href="#" class="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">Buy</a>
-        <a href="#" class="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">Rent</a>
+        <a href="#" class="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Buy</a>
+        <a href="#" class="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Rent</a>
 
         <!-- List Property dropdown -->
         <div class="relative">
           <button
             type="button"
             (click)="toggleListMenu(); $event.stopPropagation()"
-            class="flex items-center gap-1 text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors cursor-pointer">
+            class="flex items-center gap-1 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer">
             List Property
             <svg class="w-3.5 h-3.5 transition-transform" [class.rotate-180]="isListMenuOpen()"
                  viewBox="0 0 20 20" fill="currentColor">
@@ -34,15 +34,15 @@
           </button>
 
           @if (isListMenuOpen()) {
-            <div class="absolute top-full right-0 mt-3 w-80 bg-white rounded-2xl border border-gray-100 shadow-xl p-2 z-50"
+            <div class="absolute top-full right-0 mt-3 w-80 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-xl p-2 z-50"
                  (click)="$event.stopPropagation()">
 
               <button type="button" (click)="startListing('sell')"
-                      class="group w-full text-left flex items-start gap-3 p-3 rounded-xl hover:bg-blue-50 transition-colors">
+                      class="group w-full text-left flex items-start gap-3 p-3 rounded-xl hover:bg-blue-50 dark:hover:bg-gray-700/60 transition-colors">
                 <div class="text-2xl flex-shrink-0">🏷️</div>
                 <div class="min-w-0">
-                  <div class="text-sm font-bold text-gray-900 group-hover:text-blue-700">List for Sale</div>
-                  <p class="text-xs text-gray-500 mt-0.5 leading-snug">
+                  <div class="text-sm font-bold text-gray-900 dark:text-gray-100 group-hover:text-blue-700 dark:group-hover:text-blue-300">List for Sale</div>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 leading-snug">
                     Reach lakhs of serious buyers across UP. Sell your home, plot, or commercial space in weeks, not months.
                   </p>
                 </div>
@@ -53,42 +53,52 @@
                 <div class="text-2xl flex-shrink-0">🔑</div>
                 <div class="min-w-0">
                   <div class="flex items-center gap-2">
-                    <div class="text-sm font-bold text-gray-900 group-hover:text-blue-700">List for Rent</div>
-                    <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-full uppercase tracking-wide">Earn monthly</span>
+                    <div class="text-sm font-bold text-gray-900 dark:text-gray-100 group-hover:text-blue-700 dark:group-hover:text-blue-300">List for Rent</div>
+                    <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 dark:text-emerald-300 dark:bg-emerald-900/40 px-1.5 py-0.5 rounded-full uppercase tracking-wide">Earn monthly</span>
                   </div>
-                  <p class="text-xs text-gray-500 mt-0.5 leading-snug">
+                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 leading-snug">
                     Turn your spare apartment, PG, or floor into steady rental income. Verified tenants. Zero brokerage.
                   </p>
                 </div>
               </button>
 
-              <div class="border-t border-gray-100 my-1"></div>
-              <p class="px-3 py-2 text-[11px] text-gray-400">
+              <div class="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+              <p class="px-3 py-2 text-[11px] text-gray-400 dark:text-gray-500">
                 Free for owners · KYC verified · Listings live in minutes
               </p>
             </div>
           }
         </div>
 
-        <a href="#" class="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">Agents</a>
+        <a href="#" class="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Agents</a>
       </div>
 
       <!-- Desktop auth buttons -->
       <div class="hidden md:flex items-center gap-3">
+
+        <!-- Theme toggle -->
+        <button type="button"
+          (click)="themeService.toggle()"
+          [attr.aria-label]="themeService.isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
+          [title]="themeService.isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
+          class="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+          <lucide-icon [name]="themeService.isDark() ? SunIcon : MoonIcon" class="w-5 h-5"></lucide-icon>
+        </button>
+
         @if (authService.user()) {
           <a [routerLink]="['/profile']"
-             class="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors">
+             class="text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
             Hi, {{ authService.userName }}
           </a>
-          <button 
+          <button
             (click)="handleSignOut()"
-             class="text-sm font-medium border border-gray-200 px-4 py-2 rounded-lg
-                    text-gray-700 hover:text-red-600 hover:border-red-200 transition-colors">
+             class="text-sm font-medium border border-gray-200 dark:border-gray-700 px-4 py-2 rounded-lg
+                    text-gray-700 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-red-800 transition-colors">
             Sign Out
         </button>
         } @else {
           <button (click)="openAuthModal('signin')"
-            class="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors">
+            class="text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
             Sign In
           </button>
           <button (click)="openAuthModal('signup')"
@@ -99,55 +109,63 @@
         }
       </div>
 
-      <!-- Mobile menu button -->
-      <button (click)="toggleMenu()" class="md:hidden p-2 text-gray-600">
-        <lucide-icon [name]="MenuIcon" class="w-6 h-6"></lucide-icon>
-      </button>
+      <!-- Mobile right side: theme toggle + menu button -->
+      <div class="flex items-center gap-1 md:hidden">
+        <button type="button"
+          (click)="themeService.toggle()"
+          [attr.aria-label]="themeService.isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
+          class="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+          <lucide-icon [name]="themeService.isDark() ? SunIcon : MoonIcon" class="w-5 h-5"></lucide-icon>
+        </button>
+        <button (click)="toggleMenu()" class="p-2 text-gray-600 dark:text-gray-300">
+          <lucide-icon [name]="MenuIcon" class="w-6 h-6"></lucide-icon>
+        </button>
+      </div>
 
     </div>
   </div>
 
   <!-- Mobile menu -->
   @if (isMenuOpen) {
-    <div class="md:hidden bg-white border-b border-gray-100 px-4 py-4 space-y-3">
-      <a href="#" class="block text-sm font-medium text-gray-700 hover:text-blue-600">Buy</a>
-      <a href="#" class="block text-sm font-medium text-gray-700 hover:text-blue-600">Rent</a>
+    <div class="md:hidden bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 px-4 py-4 space-y-3">
+      <a href="#" class="block text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400">Buy</a>
+      <a href="#" class="block text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400">Rent</a>
 
       <!-- List Property — expanded inline on mobile -->
       <div class="space-y-2">
-        <p class="text-[11px] font-bold uppercase tracking-wider text-gray-400 mt-2">List your property</p>
+        <p class="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mt-2">List your property</p>
         <button type="button" (click)="startListing('sell')"
-                class="w-full text-left flex items-start gap-3 p-2.5 rounded-lg bg-gray-50 hover:bg-blue-50">
+                class="w-full text-left flex items-start gap-3 p-2.5 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-gray-700">
           <span class="text-lg flex-shrink-0">🏷️</span>
           <span class="min-w-0">
-            <span class="block text-sm font-semibold text-gray-900">List for Sale</span>
-            <span class="block text-xs text-gray-500 leading-snug mt-0.5">Reach buyers across UP — sell faster.</span>
+            <span class="block text-sm font-semibold text-gray-900 dark:text-gray-100">List for Sale</span>
+            <span class="block text-xs text-gray-500 dark:text-gray-400 leading-snug mt-0.5">Reach buyers across UP — sell faster.</span>
           </span>
         </button>
         <button type="button" (click)="startListing('rent')"
-                class="w-full text-left flex items-start gap-3 p-2.5 rounded-lg bg-gray-50 hover:bg-blue-50">
+                class="w-full text-left flex items-start gap-3 p-2.5 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-gray-700">
           <span class="text-lg flex-shrink-0">🔑</span>
           <span class="min-w-0">
             <span class="flex items-center gap-2">
-              <span class="block text-sm font-semibold text-gray-900">List for Rent</span>
-              <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-full uppercase">Earn monthly</span>
+              <span class="block text-sm font-semibold text-gray-900 dark:text-gray-100">List for Rent</span>
+              <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 dark:text-emerald-300 dark:bg-emerald-900/40 px-1.5 py-0.5 rounded-full uppercase">Earn monthly</span>
             </span>
-            <span class="block text-xs text-gray-500 leading-snug mt-0.5">Turn your spare home into rental income.</span>
+            <span class="block text-xs text-gray-500 dark:text-gray-400 leading-snug mt-0.5">Turn your spare home into rental income.</span>
           </span>
         </button>
       </div>
 
-      <a href="#" class="block text-sm font-medium text-gray-700 hover:text-blue-600 pt-2">Agents</a>
-      <hr class="border-gray-100">
+      <a href="#" class="block text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 pt-2">Agents</a>
+      <hr class="border-gray-100 dark:border-gray-800">
       @if (authService.user()) {
-        <a [routerLink]="['/profile']" class="block text-sm font-medium text-gray-700">
+        <a [routerLink]="['/profile']" class="block text-sm font-medium text-gray-700 dark:text-gray-200">
           Hi, {{ authService.userName }}
         </a>
-        <button 
-            (click)="handleSignOut()" class="block text-sm font-medium text-blue-600">Sign Out</button>
+        <button
+            (click)="handleSignOut()" class="block text-sm font-medium text-blue-600 dark:text-blue-400">Sign Out</button>
       } @else {
         <button (click)="openAuthModal('signin')"
-          class="block w-full text-left text-sm font-medium text-gray-700 hover:text-blue-600">
+          class="block w-full text-left text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400">
           Sign In
         </button>
         <button (click)="openAuthModal('signup')"

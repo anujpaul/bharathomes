@@ -1,4 +1,12 @@
 @import "tailwindcss";
+
+/*
+ * Class-based dark mode for Tailwind v4. The default `dark:` variant uses
+ * `prefers-color-scheme`, which we don't want — we need a class we can flip
+ * from a toggle. ThemeService adds/removes the `.dark` class on <html>.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
 swiper-container {
   display: block;
   width: 100%;
@@ -8,4 +16,10 @@ swiper-container {
 /* Ensure the lightbox overlay has a high z-index */
 .cdk-overlay-pane {
   z-index: 1000;
+}
+
+/* Smooth color transitions when toggling theme — kept narrow to avoid
+   accidentally animating layout/transform changes elsewhere. */
+html, body {
+  transition: background-color 200ms ease, color 200ms ease;
 }
