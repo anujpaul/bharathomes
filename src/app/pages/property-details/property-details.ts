@@ -50,7 +50,7 @@ interface Person {
         </div>
       }
 
-      <div class="top-section">
+      <div class="top-section text-gray-900">
 
         <!-- GALLERY -->
         <div class="gallery-container">
@@ -389,10 +389,19 @@ export class PropertyDetailsComponent implements OnInit {
 
   }
 
+  /**
+   * "Owner" here means the user who created the listing — i.e. the lister.
+   * Only they should see the edit toggle.
+   *
+   * Earlier this was comparing user.id to the agents list, which meant the
+   * actual lister (who isn't necessarily an agent on the property) couldn't
+   * edit their own listing, while every co-listed agent could. Flipped to
+   * a direct listerId match.
+   */
   isOwner(property: Property): boolean {
     const user = this.currentUser();
     if (!user) return false;
-    return property.agents?.some(a => a.id === user.id) ?? false;
+    return !!property.listerId && property.listerId === user.id;
   }
 
   saveChanges(property: Property) {

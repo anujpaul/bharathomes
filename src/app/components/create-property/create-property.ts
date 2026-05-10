@@ -54,7 +54,7 @@ const AMENITIES_OPTIONS = [
 
           <!-- ───────────── STEP 1: BASICS ───────────── -->
           @if (currentStep() === 1) {
-            <div class="form-card animate-in">
+            <div class="form-card animate-in text-gray-900">
               <div class="card-header">
                 <div class="card-icon">🏠</div>
                 <div>
@@ -257,7 +257,7 @@ const AMENITIES_OPTIONS = [
 
           <!-- ───────────── STEP 2: DETAILS ───────────── -->
           @if (currentStep() === 2) {
-            <div class="form-card animate-in">
+            <div class="form-card animate-in text-gray-900">
               <div class="card-header">
                 <div class="card-icon">📐</div>
                 <div>
