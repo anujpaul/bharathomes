@@ -24,16 +24,20 @@ export class PropertyService {
       return resp;
     }
 
-    createProperty(payload: Omit<Property, 'id' | 'agents' | 'listerId' | 'agentId' >): Observable<Property> {
-      return this.http.post<Property>(`${this.apiUrl}/property`, payload);
-    }
+  createProperty(payload: Omit<Property, 'id' | 'agents' | 'listerId' | 'agentId' >): Observable<Property> {
+    return this.http.post<Property>(`${this.apiUrl}/property`, payload);
+  }
 
-    uploadImages(propertyId: string, files: File[]): Observable<string[]> {
-      console.log(`Id is : ${propertyId}`);
-      const formData = new FormData();
-      files.forEach(file => formData.append('file', file, file.name));
-      return this.http.post<string[]>(`${this.apiUrl}/${propertyId}/images`, formData);
-    }
+  uploadImages(propertyId: string, files: File[]): Observable<string[]> {
+    console.log(`Id is : ${propertyId}`);
+    const formData = new FormData();
+    files.forEach(file => formData.append('files', file, file.name));
+    return this.http.post<string[]>(`${this.apiUrl}/${propertyId}/media`, formData);
+  }
+
+  reorderImages(propertyId: string, images: { url: string, sortOrder: number }[]): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/${propertyId}/reorder-images`, { images });
+  }
 
     // uploadImages(propertyId: string, files: File[]): Observable<Property> {
     //   const formData = new FormData();

@@ -55,12 +55,21 @@ interface Person {
         <!-- GALLERY -->
         <div class="gallery-container">
           <div class="hero-image">
-            <img [src]="property.images[0]" (click)="openLightbox(property, 0)" alt="Main">
+            @if (!isVideo(property.images[0])) {
+              <img [src]="property.images[0]" (click)="openLightbox(property, 0)" alt="Main">
+            }
+            @else {
+              <video controls [src]="property.images[0]" style="width:100%; height:320px; object-fit:cover;"></video>
+            }
           </div>
           <div class="thumbnail-grid">
-            @for (img of property.images.slice(1, 5); track img; let i = $index) {
+            @for (media of property.images.slice(1, 5); track media; let i = $index) {
               <div class="thumbnail-wrapper">
-                <img [src]="img" (click)="openLightbox(property, i + 1)" alt="Thumb">
+              @if (!isVideo(media)) {
+                <img [src]="media" (click)="openLightbox(property, i + 1)" alt="Thumb">
+              }@else {
+                <video [src]="media" (click)="openVideoModal(media)" muted style="width:100%; height:140px; object-fit:cover;"></video>
+              }
                 @if (i === 3 && property.images.length > 5) {
                   <div class="more-overlay" (click)="openLightbox(property, 5); $event.stopPropagation()">
                     <span>+{{ property.images.length - 5 }}</span>
@@ -68,8 +77,10 @@ interface Person {
                 }
                 <!-- DELETE BUTTON in edit mode -->
                 @if (editMode) {
-                  <button class="delete-img-btn" (click)="removeImage(property, img); $event.stopPropagation()">✕</button>
+                  <button class="delete-img-btn" (click)="removeImage(property, media); $event.stopPropagation()">✕</button>
+                  <button class="set-hero-btn" (click)="setAsHero(property, media); $event.stopPropagation()" title="Set as main image">★</button>
                 }
+                
               </div>
             }
           </div>
@@ -77,7 +88,7 @@ interface Person {
           <!-- UPLOAD ZONE in edit mode -->
           @if (editMode) {
             <div class="upload-zone" (click)="fileInput.click()" (dragover)="$event.preventDefault()" (drop)="onDrop($event, property)">
-              <input #fileInput type="file" multiple accept="image/*" style="display:none" (change)="onFileSelect($event, property)">
+              <input #fileInput type="file" multiple accept="image/*, video/*" style="display:none" (change)="onFileSelect($event, property)">
               <div class="upload-prompt ">
                 @if (uploading ) {
                   
@@ -271,6 +282,27 @@ interface Person {
     /* UPLOAD ZONE */
     .upload-zone { border: 2px dashed #2c7be5; border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; color: #2c7be5; font-size: 0.9rem; margin-top: 4px; }
     .upload-zone:hover { background: #f0f6ff; }
+    .set-hero-btn {
+      position: absolute;
+      bottom: 6px;
+      right: 6px;
+      background: rgba(255, 215, 0, 0.85);
+      color: #333;
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      font-weight: bold;
+    }
+    .set-hero-btn:hover {
+      background: rgba(255, 200, 0, 1);
+    }
   
     /* RESPONSIVE */
     @media (max-width: 768px) {
@@ -299,6 +331,9 @@ export class PropertyDetailsComponent implements OnInit {
   currentUser = this.authService.authResponse; // signal or property from your auth service
   listerId = '';
   lister: UserProfile | null = null;
+  isVideo(url: string): boolean {
+    return /\.(mp4|webm|ogg|mov|avi|mkv)$/i.test(url);
+  }
 
   /**
    * Unified people list shown in the side panel.
@@ -434,12 +469,13 @@ export class PropertyDetailsComponent implements OnInit {
 
   onDrop(event: DragEvent, property: Property) {
     event.preventDefault();
-    const files = Array.from(event.dataTransfer?.files ?? []).filter(f => f.type.startsWith('image/'));
+    const files = Array.from(event.dataTransfer?.files ?? []).filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'));
     if (files.length) this.uploadFiles(files, property);
   }
 
   private uploadFiles(files: File[], property: Property) {
     this.uploading = true;
+
     this.propertyService.uploadImages(property.id, files).subscribe({
       next: () => {
         this.uploading = false;
@@ -454,7 +490,44 @@ export class PropertyDetailsComponent implements OnInit {
     });
   }
 
+  openVideoModal(videoUrl: string) {
+    // Option 1: Open in a new tab
+    window.open(videoUrl, '_blank');
+    
+    // Option 2: Use a simple alert or custom modal
+    // alert(`Play video: ${videoUrl}`);
+  }
+  
+  setAsHero(property: Property, imageUrl: string) {
+    // Find current index of the target image
+    const currentImages = [...property.images];
+    const index = currentImages.findIndex(url => url === imageUrl);
+    if (index === -1 || index === 0) return;
+  
+    // Move the target to the front
+    const [moved] = currentImages.splice(index, 1);
+    currentImages.unshift(moved);
+  
+    // Update SortOrder on the backend for all images
+    const updatedImages = currentImages.map((url, idx) => ({ url, sortOrder: idx }));
+    
+    this.propertyService.reorderImages(property.id, updatedImages).subscribe({
+      next: () => {
+        // Refresh the property
+        this.property$ = this.propertyService.getPropertyById(property.id);
+        this.property$.subscribe(p => {
+          this.editData = { ...p };
+          this.cdr.detectChanges();
+        });
+      }
+    });
+  }
+
   openLightbox(property: Property, index: number) {
-    this.lightboxService.open(property.images, index);
+    const imagesOnly = property.images.filter(url => !this.isVideo(url));
+    const adjustedIndex = imagesOnly.findIndex(url => url === property.images[index]);
+    if (adjustedIndex !== -1) {
+      this.lightboxService.open(imagesOnly, adjustedIndex);
+    }
   }
 }
