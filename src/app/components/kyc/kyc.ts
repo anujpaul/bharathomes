@@ -561,9 +561,21 @@ export class Kyc implements OnInit {
     // Load current KYC status from backend
     this.http.get<any>(`${this.apiUrl}/kyc/status`).subscribe({
       next: (res) => {
-        this.kycStatus.set(res.status ?? 'pending');
+        const fresh = res.status ?? 'pending';
+        this.kycStatus.set(fresh);
         this.userEmail.set(res.email ?? '');
         this.rejectionReason.set(res.rejectionReason ?? '');
+
+        // The cached authService.authResponse() snapshot was taken at sign-in
+        // and doesn't see admin-side changes. If our fresh /kyc/status doesn't
+        // match the cache (e.g. admin just approved → DB says verified, cache
+        // still says submitted), refresh the profile so kycGuard reads truth
+        // on the next navigation. Without this the user gets stuck in a
+        // /kyc → /property/create → /kyc loop after approval.
+        const cachedStatus = this.authService.authResponse()?.kycStatus;
+        if (cachedStatus !== fresh) {
+          this.authService.fetchUserProfile();
+        }
       }
     });
 
