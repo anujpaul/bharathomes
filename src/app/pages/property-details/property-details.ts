@@ -78,8 +78,9 @@ interface Person {
           @if (editMode) {
             <div class="upload-zone" (click)="fileInput.click()" (dragover)="$event.preventDefault()" (drop)="onDrop($event, property)">
               <input #fileInput type="file" multiple accept="image/*" style="display:none" (change)="onFileSelect($event, property)">
-              <div class="upload-prompt">
-                @if (uploading) {
+              <div class="upload-prompt ">
+                @if (uploading ) {
+                  
                   <span>Uploading...</span>
                 } @else {
                   <span>📁 Click or drag images to upload</span>
@@ -378,7 +379,7 @@ export class PropertyDetailsComponent implements OnInit {
         // this.editData.images = [];
         // this.editData.amenities = [];
 
-        this.editData ={...property, images: [], amenities: []};
+        this.editData ={...property };
 
 
       },
@@ -443,6 +444,11 @@ export class PropertyDetailsComponent implements OnInit {
       next: () => {
         this.uploading = false;
         this.property$ = this.propertyService.getPropertyById(property.id);
+        this.property$.subscribe(p => {
+          this.editData = { ...p };   // keep editData in sync
+          this.cdr.detectChanges();
+        });
+
       },
       error: () => { this.uploading = false; }
     });
