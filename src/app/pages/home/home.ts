@@ -64,6 +64,15 @@ private propertyService = inject(PropertyService);
     return Math.max(HomePageComponent.PRICE_CEILING_FLOOR, roundedUp);
   });
 
+  cities = computed(() => {
+    const set = new Set<string>();
+    for (const p of this.allProperties()) {
+      const c = p.city?.trim();
+      if (c) set.add(c);
+    }
+    return ['All Cities', ...Array.from(set).sort((a, b) => a.localeCompare(b))];
+  });
+
   // get filteredProperties(): Property[] {
   //   return PROPERTIES.filter((p) => {
   //     const matchesSearch = this.searchQuery === '' || 
@@ -85,9 +94,10 @@ private propertyService = inject(PropertyService);
     const query = this.searchQuery().toLowerCase();
     const city = this.selectedCity();
     const type = this.selectedType();
-    const maxPrice = this.priceRange()[1];
-    // When the slider sits at the dynamic ceiling, treat it as "no upper bound"
-    // so listings that happen to be above the ceiling at any moment still show.
+    const [minPrice, maxPrice] = this.priceRange();
+    // When the upper bound sits at the dynamic ceiling, treat it as "no upper
+    // bound" so listings that happen to be above the ceiling at any moment
+    // still show. The lower bound is respected literally — 0 means no floor.
     const noUpperBound = maxPrice >= this.priceCeiling();
 
     return this.allProperties().filter((p) => {
@@ -97,7 +107,7 @@ private propertyService = inject(PropertyService);
 
       const matchesCity = city === 'All Cities' || p.city === city;
       const matchesType = type === 'All Types' || p.type === type;
-      const matchesPrice = noUpperBound || p.price <= maxPrice;
+      const matchesPrice = p.price >= minPrice && (noUpperBound || p.price <= maxPrice);
 
       return matchesSearch && matchesCity && matchesType && matchesPrice;
     });

@@ -2,7 +2,7 @@ import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import { AsyncPipe, DecimalPipe, NgFor } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { PropertyService } from '@/app/services/property-service';
-import { Property, Agent } from '@/types';
+import { Property, Agent, UserProfile } from '@/types';
 import { Observable, forkJoin, switchMap } from 'rxjs';
 import { LightboxService } from '@/app/services/lightbox-service';
 import { AgentService } from '@/app/services/agent-service';
@@ -10,6 +10,25 @@ import { PropertyImageUploadComponent } from '@/app/components/property-image-up
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '@/app/services/auth.service';
 import { InrPricePipe } from '@/app/pipes/inr-price.pipe';
+import { UserService } from '@/app/services/user-service';
+
+/**
+ * Row in the side-panel "people" list. Pulled together from `Agent` and
+ * `UserProfile` (which have overlapping but not identical shapes). The two
+ * boolean flags drive the badge shown in the template.
+ */
+interface Person {
+  id: string;
+  name: string;
+  photo?: string;
+  phone?: string;
+  role?: string;
+  rating?: number;
+  listingsCount?: number;
+  specialization?: string;
+  isLister: boolean;
+  isAgent: boolean;
+}
 
 @Component({
   selector: 'app-property-details',
@@ -126,29 +145,48 @@ import { InrPricePipe } from '@/app/pipes/inr-price.pipe';
 
           <div class="divider"></div>
 
-          <!-- AGENTS SECTION -->
-          <div class="agents-section">
-            <div class="section-label">Listed By</div>
+          <!-- AGENTS + LISTER SECTION -->
+          <div class="lister-section">
+            <div class="section-label">
+              {{ people.length > 1 ? 'Contacts' : 'Listed By' }}
+            </div>
             @if (agentsLoading) {
               <div class="agents-loading">
                 <div class="skeleton-agent"></div>
               </div>
             }
             @if (!agentsLoading) {
-              @for (agent of agents; track agent.id) {
+              @for (p of people; track p.id) {
                 <div class="agent-card">
-                  <img class="agent-photo" [src]="agent.userPhoto || 'assets/default-avatar.png'" [alt]="agent.name">
+                  <img class="agent-photo" [src]="p.photo" [alt]="p.name">
                   <div class="agent-info">
-                    <div class="agent-name">{{ agent.name }}</div>
-                    @if (agent.role) { <div class="agent-role">{{ agent.role }}</div> }
-                    <div class="agent-meta">
-                      <span class="agent-rating">⭐ {{ agent.rating }}</span>
-                      <span class="agent-dot">·</span>
-                      <span class="agent-listings">{{ agent.listingsCount }} listings</span>
+                    <div class="agent-name-row">
+                      <span class="agent-name">{{ p.name }}</span>
+                      @if (p.isLister && p.isAgent) {
+                        <span class="badge badge-combined">Lister · Agent</span>
+                      } @else if (p.isLister) {
+                        <span class="badge badge-lister">Lister</span>
+                      } @else {
+                        <span class="badge badge-agent">Agent</span>
+                      }
                     </div>
-                    <div class="agent-specialization">{{ agent.specialization }}</div>
-                    @if (agent.phone) {
-                      <a class="agent-phone" [href]="'tel:' + agent.phone">📞 {{ agent.phone }}</a>
+                    @if (p.role) { <div class="agent-role">{{ p.role }}</div> }
+                    <div class="agent-meta">
+                      @if (p.rating != null && p.rating > 0) {
+                        <span class="agent-rating">⭐ {{ p.rating }}</span>
+                      }
+                      @if (p.rating != null && p.rating > 0 && p.listingsCount) {
+                        <span class="agent-dot">·</span>
+                      }
+                      @if (p.listingsCount) {
+                        <span class="agent-listings">{{ p.listingsCount }} listings</span>
+                      }
+                    </div>
+                    @if (p.specialization) {
+                      <div class="agent-specialization">{{ p.specialization }}</div>
+                    }
+                    @if (p.phone) {
+                      <a class="agent-phone" [href]="'tel:' + p.phone">📞 {{ p.phone }}</a>
                     }
                   </div>
                 </div>
@@ -190,11 +228,12 @@ import { InrPricePipe } from '@/app/pipes/inr-price.pipe';
     .spec-divider { width: 1px; height: 36px; background: #ebebeb; }
   
     /* AGENTS */
-    .agents-section { display: flex; flex-direction: column; gap: 12px; }
+    .lister-section { display: flex; flex-direction: column; gap: 12px; }
     .section-label { font-size: 0.72rem; color: #999; text-transform: uppercase; letter-spacing: 0.05em; }
     .agent-card { display: flex; gap: 12px; align-items: flex-start; padding: 12px; background: #f8f9fa; border-radius: 10px; }
-    .agent-photo { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
-    .agent-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .agent-photo { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; flex-shrink: 0; background: #e0e0e0; }
+    .agent-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+    .agent-name-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
     .agent-name { font-size: 0.95rem; font-weight: 600; color: #1a1a2e; }
     .agent-role { font-size: 0.78rem; color: #888; }
     .agent-meta { display: flex; align-items: center; gap: 4px; font-size: 0.78rem; color: #666; margin-top: 2px; }
@@ -202,6 +241,12 @@ import { InrPricePipe } from '@/app/pipes/inr-price.pipe';
     .agent-specialization { font-size: 0.75rem; color: #aaa; font-style: italic; }
     .agent-phone { font-size: 0.82rem; color: #2c7be5; text-decoration: none; margin-top: 4px; }
     .agent-phone:hover { text-decoration: underline; }
+
+    /* ROLE BADGES */
+    .badge { font-size: 0.65rem; font-weight: 700; padding: 2px 7px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.04em; line-height: 1.4; }
+    .badge-lister   { background: #ecfdf5; color: #047857; }
+    .badge-agent    { background: #eff6ff; color: #1d4ed8; }
+    .badge-combined { background: #fef3c7; color: #92400e; }
   
     /* SKELETON */
     .agents-loading { display: flex; flex-direction: column; gap: 10px; }
@@ -241,6 +286,8 @@ export class PropertyDetailsComponent implements OnInit {
   private lightboxService = inject(LightboxService);
   private agentService = inject(AgentService);
   private authService = inject(AuthService);
+  private userService = inject(UserService);
+
 
   property$!: Observable<Property>;
   agents: Agent[] = [];
@@ -249,7 +296,61 @@ export class PropertyDetailsComponent implements OnInit {
   uploading = false;
   pendingChanges = false;
   currentUser = this.authService.authResponse; // signal or property from your auth service
+  listerId = '';
+  lister: UserProfile | null = null;
 
+  /**
+   * Unified people list shown in the side panel.
+   *
+   * Behaviour:
+   *  - Always include every agent attached to the property.
+   *  - Also include the lister as a separate entry, *unless* the lister is
+   *    already one of the agents (matched by id) — in that case we just mark
+   *    that agent's card with a "Lister · Agent" badge instead of showing
+   *    them twice.
+   *  - Each entry carries `isLister` / `isAgent` flags so the template can
+   *    render the right badge without further branching.
+   *
+   * Recomputed on every change-detection cycle. That's fine — `agents` and
+   * `lister` are tiny per-page arrays, so doing the merge here keeps the
+   * single-source-of-truth in one place rather than spread across template
+   * conditions.
+   */
+  get people(): Person[] {
+    const agentList = this.agents ?? [];
+    const lister = this.lister;
+    const listerIsAgent = !!lister && agentList.some(a => a.id === lister.id);
+
+    const fromAgents: Person[] = agentList.map(a => ({
+      id: a.id,
+      name: a.name,
+      photo: a.userPhoto,
+      phone: a.phone,
+      role: a.role,
+      rating: a.rating,
+      listingsCount: a.listingsCount,
+      specialization: a.specialization,
+      isAgent: true,
+      // Mark the matching agent as lister too — drives the combined badge.
+      isLister: !!lister && a.id === lister.id,
+    }));
+
+    if (lister && !listerIsAgent) {
+      fromAgents.push({
+        id: lister.id,
+        name: lister.name,
+        photo: lister.userPhoto,
+        phone: lister.phone,
+        role: lister.userRole,
+        rating: lister.rating,
+        listingsCount: lister.listingsCount,
+        isAgent: false,
+        isLister: true,
+      });
+    }
+
+    return fromAgents;
+  }
   // editData: Partial<Property> = {};
   editData: Property = {} as Property;
   private cdr = inject(ChangeDetectorRef);
@@ -265,16 +366,27 @@ export class PropertyDetailsComponent implements OnInit {
       next: (property) => {
         this.agents = property.agents ?? [];
         this.agentsLoading = false;
-        // Seed edit data with current values
-        // this.editData = { title: property.title, price: property.price };
-        this.editData = property;
-        this.editData.images = [];
-        this.editData.amenities = [];
+        if (property.listerId) {
+          this.userService.getUserProfileById(property.listerId).subscribe({
+            next: (lister) => this.lister = lister
+          });
+        }
         
+        // Seed edit data with current values
+        // // this.editData = { title: property.title, price: property.price };
+        // this.editData = property;
+        // this.editData.images = [];
+        // this.editData.amenities = [];
+
+        this.editData ={...property, images: [], amenities: []};
+
 
       },
       error: () => { this.agentsLoading = false; }
     });
+
+    
+
   }
 
   isOwner(property: Property): boolean {

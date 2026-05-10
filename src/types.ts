@@ -75,6 +75,8 @@ export interface UserProfile {
   savedPropertyIds: string[];
   savedCount: number;
   enquiriesCount: number;
+  rating: number;
+  listingsCount: number;
 }
 
 export type VastuOrientation =

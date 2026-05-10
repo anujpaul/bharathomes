@@ -107,6 +107,22 @@ export class NavbarComponent {
     this.resetForm();
   }
 
+  /**
+   * Close the auth modal when the user clicks the backdrop — but only when
+   * the mousedown actually originated on the backdrop itself.
+   *
+   * Why mousedown and not click: if the user is selecting text inside an
+   * input and releases the mouse outside the modal, a `click` event fires
+   * on the backdrop (the common ancestor of mousedown and mouseup), which
+   * would otherwise close the modal mid-selection. Listening to `mousedown`
+   * with the target/currentTarget check avoids that entirely.
+   */
+  onBackdropMousedown(event: MouseEvent): void {
+    if (event.target === event.currentTarget) {
+      this.closeAuthModal();
+    }
+  }
+
   closeAuthModal() {
     this.showAuthModal.set(false);
     this.showOtpStep.set(false);

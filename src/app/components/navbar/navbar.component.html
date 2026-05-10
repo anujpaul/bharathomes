@@ -181,9 +181,8 @@
 <!-- Auth Modal -->
 @if (showAuthModal()) {
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-       (click)="closeAuthModal()">
-    <div class="bg-white rounded-2xl border border-gray-100 p-8 w-full max-w-sm mx-4 relative"
-         (click)="$event.stopPropagation()">
+       (mousedown)="onBackdropMousedown($event)">
+    <div class="bg-white rounded-2xl border border-gray-100 p-8 w-full max-w-sm mx-4 relative">
 
       <button (click)="closeAuthModal()"
         class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-lg">✕</button>
@@ -216,7 +215,7 @@
       @if (showResetOtpStep()) {
         <div class="flex flex-col gap-3">
           <p class="text-sm text-gray-600 text-center">
-            A reset code was sent to
+            If an email exist in our system, A reset code is sent to
             <span class="font-medium">{{ resetEmail() }}</span>.
             Enter it below to set a new password.
           </p>
@@ -227,7 +226,7 @@
             maxlength="6"
             [value]="resetOtp()"
             (input)="resetOtp.set($any($event.target).value)"
-            class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-center
+            class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 text-center
                    tracking-widest focus:outline-none focus:ring-2 focus:ring-blue-500">
       
           <input
@@ -235,7 +234,7 @@
             placeholder="New password (min 8 characters)"
             [value]="newPassword()"
             (input)="newPassword.set($any($event.target).value)"
-            class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm
+            class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900
                    focus:outline-none focus:ring-2 focus:ring-blue-500">
       
           <input
@@ -243,7 +242,7 @@
             placeholder="Confirm new password"
             [value]="confirmNewPassword()"
             (input)="confirmNewPassword.set($any($event.target).value)"
-            class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm
+            class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900
                    focus:outline-none focus:ring-2 focus:ring-blue-500">
       
           @if (errorMessage()) {
@@ -279,7 +278,7 @@
             maxlength="6"
             [value]="otp()"
             (input)="otp.set($any($event.target).value)"
-            class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-center
+            class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 text-center
                    tracking-widest focus:outline-none focus:ring-2 focus:ring-blue-500">
       
           @if (errorMessage()) {
@@ -310,7 +309,7 @@
               placeholder="Full name"
               [value]="name()"
               (input)="name.set($any($event.target).value)"
-              class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm
+              class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900
                      focus:outline-none focus:ring-2 focus:ring-blue-500">
           }
       
@@ -319,7 +318,7 @@
             placeholder="Email address"
             [value]="email()"
             (input)="email.set($any($event.target).value)"
-            class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm
+            class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900
                    focus:outline-none focus:ring-2 focus:ring-blue-500">
       
           <input
@@ -327,7 +326,7 @@
             [placeholder]="authMode() === 'signup' ? 'Password (min 8 characters)' : 'Password'"
             [value]="password()"
             (input)="password.set($any($event.target).value)"
-            class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm
+            class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900
                    focus:outline-none focus:ring-2 focus:ring-blue-500">
       
           @if (authMode() === 'signin') {
@@ -345,7 +344,7 @@
               placeholder="Confirm password"
               [value]="confirmPassword()"
               (input)="confirmPassword.set($any($event.target).value)"
-              class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm
+              class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900
                      focus:outline-none focus:ring-2 focus:ring-blue-500">
           }
       

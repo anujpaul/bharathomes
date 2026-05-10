@@ -11,9 +11,12 @@
         (reset)="resetFilters()"
     ></app-filters> -->
 
-    <app-filters [selectedCity]="selectedCity()" (selectedCityChange)="selectedCity.set($event)"
+    <app-filters 
+        [selectedCity]="selectedCity()" (selectedCityChange)="selectedCity.set($event)"
+        [cities]="cities()"
         [selectedType]="selectedType()" (selectedTypeChange)="selectedType.set($event)" [priceRange]="priceRange()"
-        [priceMax]="priceCeiling()" (priceRangeChange)="priceRange.set($event)" (reset)="resetFilters()"></app-filters>
+        [priceMax]="priceCeiling()" (priceRangeChange)="priceRange.set($event)" (reset)="resetFilters()">
+    </app-filters>
 
     <!-- Featured Section -->
     <!-- @if (searchQuery === '' && selectedCity === 'All Cities') {
