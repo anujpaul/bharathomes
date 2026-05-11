@@ -59,7 +59,7 @@ interface Person {
               <img [src]="property.images[0]" (click)="openLightbox(property, 0)" alt="Main">
             }
             @else {
-              <video controls [src]="property.images[0]" style="width:100%; height:320px; object-fit:cover;"></video>
+              <video controls playsinline preload="metadata"  [src]="property.images[0]" style="width:100%; height:320px; object-fit:cover;"></video>
             }
           </div>
           <div class="thumbnail-grid">
@@ -332,7 +332,9 @@ export class PropertyDetailsComponent implements OnInit {
   listerId = '';
   lister: UserProfile | null = null;
   isVideo(url: string): boolean {
-    return /\.(mp4|webm|ogg|mov|avi|mkv)$/i.test(url);
+    // Match the extension whether the URL ends there or has a query string
+    // (SAS tokens append `?sp=...&sig=...`).
+    return /\.(mp4|webm|ogg|mov|avi|mkv|m4v)(\?|$)/i.test(url);
   }
 
   /**
@@ -400,6 +402,8 @@ export class PropertyDetailsComponent implements OnInit {
 
     this.propertyService.getPropertyById(id).subscribe({
       next: (property) => {
+        console.log('images:', property.images);
+        console.log('isVideo per item:', property.images.map(u => ({ url: u, isVideo: this.isVideo(u) })));
         this.agents = property.agents ?? [];
         this.agentsLoading = false;
         if (property.listerId) {

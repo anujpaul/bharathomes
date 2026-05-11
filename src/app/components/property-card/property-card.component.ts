@@ -18,7 +18,12 @@ import { InrPricePipe } from '@/app/pipes/inr-price.pipe';
         <swiper-container [loop]="true" [pagination]="true" [navigation]="true">
           @for (img of property.images; track img; let i = $index) {
             <swiper-slide>
-              <img [src]="img" class="w-full h-full object-cover cursor-pointer" (click)="openLightbox(i)" />
+              @if (isVideo(img)) {
+                <video [src]="img" controls preload="metadata" playsinline
+                       class="w-full h-full object-cover bg-black"></video>
+              } @else {
+                <img [src]="img" class="w-full h-full object-cover cursor-pointer" (click)="openLightbox(i)" />
+              }
             </swiper-slide>
           }
         </swiper-container>
@@ -110,5 +115,13 @@ export class PropertyCardComponent {
   
   openLightbox(index: number) {
     this.lightbox.open(this.property.images, index);
+  }
+
+  // Treat URLs ending in common video extensions as video media. Used by
+  // the carousel to pick between <video> and <img>. Extension-based for now;
+  // when we add a proper `mediaType` field to Property.images entries this
+  // becomes `m.type === 'video'` and the regex goes away.
+  isVideo(url: string): boolean {
+    return /\.(mp4|mov|webm|m4v)(\?|$)/i.test(url);
   }
 }
