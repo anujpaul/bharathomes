@@ -68,7 +68,7 @@ interface Person {
               @if (!isVideo(media)) {
                 <img [src]="media" (click)="openLightbox(property, i + 1)" alt="Thumb">
               }@else {
-                <video [src]="media" (click)="openVideoModal(media)" muted style="width:100%; height:140px; object-fit:cover;"></video>
+                <video [src]="media" (click)="openLightbox(property, i + 1)" muted style="width:100%; height:140px; object-fit:cover; cursor:pointer;"></video>
               }
                 @if (i === 3 && property.images.length > 5) {
                   <div class="more-overlay" (click)="openLightbox(property, 5); $event.stopPropagation()">
@@ -527,11 +527,11 @@ export class PropertyDetailsComponent implements OnInit {
     });
   }
 
+  // Pass the full media array (images AND videos). The Lightbox component
+  // branches on isVideo internally and renders <video> for video URLs.
   openLightbox(property: Property, index: number) {
-    const imagesOnly = property.images.filter(url => !this.isVideo(url));
-    const adjustedIndex = imagesOnly.findIndex(url => url === property.images[index]);
-    if (adjustedIndex !== -1) {
-      this.lightboxService.open(imagesOnly, adjustedIndex);
-    }
+    if (!property.images?.length) return;
+    const safeIndex = Math.max(0, Math.min(index, property.images.length - 1));
+    this.lightboxService.open(property.images, safeIndex);
   }
 }
