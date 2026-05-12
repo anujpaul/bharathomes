@@ -59,7 +59,7 @@ interface Person {
               <img [src]="property.images[0]" (click)="openLightbox(property, 0)" alt="Main">
             }
             @else {
-              <video controls playsinline preload="metadata"  [src]="property.images[0]" style="width:100%; height:320px; object-fit:cover;"></video>
+              <video controls autoplay muted loop playsinline preload="metadata"  [src]="property.images[0]" style="width:100%; height:320px; object-fit:cover;"></video>
             }
           </div>
           <div class="thumbnail-grid">
@@ -68,7 +68,7 @@ interface Person {
               @if (!isVideo(media)) {
                 <img [src]="media" (click)="openLightbox(property, i + 1)" alt="Thumb">
               }@else {
-                <video [src]="media" (click)="openLightbox(property, i + 1)" muted style="width:100%; height:140px; object-fit:cover; cursor:pointer;"></video>
+                <video autoplay muted loop playsinline [src]="media" (click)="openLightbox(property, i + 1)" muted style="width:100%; height:140px; object-fit:cover; cursor:pointer;"></video>
               }
                 @if (i === 3 && property.images.length > 5) {
                   <div class="more-overlay" (click)="openLightbox(property, 5); $event.stopPropagation()">

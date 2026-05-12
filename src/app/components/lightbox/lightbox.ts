@@ -20,7 +20,7 @@ import { Component, HostListener, Input, CUSTOM_ELEMENTS_SCHEMA, ViewChild, Afte
         @for (item of image; track item) {
           <swiper-slide>
             @if (isVideo(item)) {
-              <video [src]="item" controls playsinline preload="metadata"
+              <video autoplay muted loop [src]="item" controls playsinline preload="metadata"
                      class="lightbox-video"></video>
             } @else {
               <img [src]="item" class="lightbox-img">
