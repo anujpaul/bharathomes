@@ -35,7 +35,34 @@ import { Component, HostListener, Input, CUSTOM_ELEMENTS_SCHEMA, ViewChild, Afte
     .lightbox-img { width: 100%; height: 100%; object-fit: contain; }
     .lightbox-video { width: 100%; height: 100%; object-fit: contain; background: #000; }
     .close-btn { position: absolute; top: 10px; right: 10px; z-index: 10; cursor: pointer; color: white; background: none; border: none; font-size: 20px;}
-    swiper-container { width: 100%; height: 100%; }
+
+    /* Swiper customization.
+       The defaults are 44px theme-blue arrows — too loud against a photo.
+       Override two CSS variables Swiper reads internally, then use ::part()
+       (Swiper exposes button-prev/button-next as shadow parts) to draw a
+       small white arrow inside a circular semi-transparent backdrop. */
+    swiper-container {
+      width: 100%;
+      height: 100%;
+      --swiper-navigation-size: 18px;
+      --swiper-navigation-color: #fff;
+      --swiper-pagination-color: #fff;
+    }
+    swiper-container::part(button-prev),
+    swiper-container::part(button-next) {
+      width: 40px;
+      height: 40px;
+      background: rgba(0, 0, 0, 0.45);
+      border-radius: 50%;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      transition: background 0.15s ease, transform 0.15s ease;
+    }
+    swiper-container::part(button-prev):hover,
+    swiper-container::part(button-next):hover {
+      background: rgba(0, 0, 0, 0.7);
+      transform: scale(1.05);
+    }
   `]
 })
 export class Lightbox implements AfterViewInit {

@@ -15,8 +15,120 @@
 
       <!-- Desktop nav links -->
       <div class="hidden md:flex items-center gap-8">
-        <a href="#" class="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Buy</a>
-        <a href="#" class="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Rent</a>
+
+        <!-- Buy mega-menu -->
+        <div class="relative">
+          <button type="button"
+                  (click)="toggleMega('buy', $event)"
+                  class="flex items-center gap-1 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer">
+            Buy
+            <svg class="w-3.5 h-3.5 transition-transform" [class.rotate-180]="openMegaMenu() === 'buy'"
+                 viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+            </svg>
+          </button>
+
+          @if (openMegaMenu() === 'buy') {
+            <div class="absolute top-full left-0 mt-3 w-[640px] bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-xl p-5 z-50 grid grid-cols-3 gap-5"
+                 (click)="$event.stopPropagation()">
+
+              <div>
+                <p class="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">Property Type</p>
+                @for (t of propertyTypes; track t.value) {
+                  <button type="button" (click)="goToListings('buy', { type: t.value })"
+                          class="w-full text-left flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700/60">
+                    <span>{{ t.emoji }}</span> {{ t.label }}
+                  </button>
+                }
+              </div>
+
+              <div>
+                <p class="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">Budget</p>
+                @for (b of buyBudgets; track b.label) {
+                  <button type="button" (click)="goToListings('buy', { minPrice: b.min, maxPrice: b.max })"
+                          class="w-full text-left px-2 py-1.5 rounded-md text-sm text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700/60">
+                    {{ b.label }}
+                  </button>
+                }
+              </div>
+
+              <div>
+                <p class="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">City</p>
+                @for (c of cities; track c) {
+                  <button type="button" (click)="goToListings('buy', { city: c })"
+                          class="w-full text-left px-2 py-1.5 rounded-md text-sm text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700/60">
+                    📍 {{ c }}
+                  </button>
+                }
+              </div>
+
+              <div class="col-span-3 border-t border-gray-100 dark:border-gray-700 pt-3 -mt-1">
+                <button type="button" (click)="goToListings('buy', {})"
+                        class="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline">
+                  Browse all properties for sale →
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Rent mega-menu -->
+        <div class="relative">
+          <button type="button"
+                  (click)="toggleMega('rent', $event)"
+                  class="flex items-center gap-1 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer">
+            Rent
+            <svg class="w-3.5 h-3.5 transition-transform" [class.rotate-180]="openMegaMenu() === 'rent'"
+                 viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+            </svg>
+          </button>
+
+          @if (openMegaMenu() === 'rent') {
+            <div class="absolute top-full left-0 mt-3 w-[640px] bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-xl p-5 z-50 grid grid-cols-3 gap-5"
+                 (click)="$event.stopPropagation()">
+
+              <div>
+                <p class="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">Property Type</p>
+                @for (t of propertyTypes; track t.value) {
+                  @if (t.value != 'Plot'){
+                  <button type="button" (click)="goToListings('rent', { type: t.value })"
+                          class="w-full text-left flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700/60">
+                    <span>{{ t.emoji }}</span> {{ t.label }}
+                  </button>
+                }
+                }
+              </div>
+
+              <div>
+                <p class="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">Monthly Budget</p>
+                @for (b of rentBudgets; track b.label) {
+                  <button type="button" (click)="goToListings('rent', { minPrice: b.min, maxPrice: b.max })"
+                          class="w-full text-left px-2 py-1.5 rounded-md text-sm text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700/60">
+                    {{ b.label }}
+                  </button>
+                }
+              </div>
+
+              <div>
+                <p class="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">City</p>
+                @for (c of cities; track c) {
+                  <button type="button" (click)="goToListings('rent', { city: c })"
+                          class="w-full text-left px-2 py-1.5 rounded-md text-sm text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700/60">
+                    📍 {{ c }}
+                  </button>
+                }
+              </div>
+
+              <div class="col-span-3 border-t border-gray-100 dark:border-gray-700 pt-3 -mt-1">
+                <button type="button" (click)="goToListings('rent', {})"
+                        class="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline">
+                  Browse all rentals →
+                </button>
+              </div>
+            </div>
+          }
+        </div>
 
         <!-- List Property dropdown -->
         <div class="relative">
@@ -128,8 +240,10 @@
   <!-- Mobile menu -->
   @if (isMenuOpen) {
     <div class="md:hidden bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 px-4 py-4 space-y-3">
-      <a href="#" class="block text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400">Buy</a>
-      <a href="#" class="block text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400">Rent</a>
+      <button type="button" (click)="goToListings('buy', {})"
+              class="block w-full text-left text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400">Buy</button>
+      <button type="button" (click)="goToListings('rent', {})"
+              class="block w-full text-left text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400">Rent</button>
 
       <!-- List Property — expanded inline on mobile -->
       <div class="space-y-2">

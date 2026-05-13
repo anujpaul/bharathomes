@@ -11,7 +11,8 @@ import { PropertyService } from '@/app/services/property-service';
 import { AgentService } from '@/app/services/agent-service';
 import { AuthService } from '@/app/services/auth.service';
 import { Agent, Property } from '@/types';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { combineLatest } from 'rxjs';
 import { CreateProperty } from '@/app/components/create-property/create-property';
 
 @Component({
@@ -34,6 +35,17 @@ private propertyService = inject(PropertyService);
   private agentService = inject(AgentService);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
+
+  /**
+   * Locked intent for /buy and /rent. Set from `route.data.intent`. When
+   * present, the component shows only listings of that intent and treats
+   * it as non-removable (the existing in-page filters can refine type/
+   * price/city on top, but cannot escape the intent scope).
+   *
+   * On the bare home page (`/`), this is null and all listings show.
+   */
+  lockedIntent = signal<'sell' | 'rent' | null>(null);
   
   // 1 Cr in INR — keeps the magic numbers below readable.
   private static readonly ONE_CR = 10_000_000;
@@ -118,23 +130,58 @@ private propertyService = inject(PropertyService);
   );
 
   ngOnInit(): void {
-    // Use the object syntax to avoid deprecation and fix the typo
-    this.propertyService.getProperties().subscribe({
-      next: (data: Property[]) => {
-        this.allProperties.set(data);
-        // Bump the slider's upper bound to the new ceiling — but only if the
-        // user is still parked at the previous ceiling (i.e. they haven't
-        // narrowed the range). Stops the slider from snapping out from under
-        // them mid-interaction.
-        const ceiling = this.priceCeiling();
-        const [lo, hi] = this.priceRange();
-        if (hi < ceiling && hi <= HomePageComponent.PRICE_CEILING_FLOOR) {
-          this.priceRange.set([lo, ceiling]);
+    // React to intent (from route.data) AND query params together, so
+    // navigating Buy → Rent OR changing only a query param both refire the
+    // API call. ActivatedRoute exposes both as observables, so combineLatest
+    // gives us "fire whenever EITHER changes."
+    combineLatest([this.route.data, this.route.queryParamMap]).subscribe(
+      ([data, params]) => {
+        const intent = (data['intent'] as 'sell' | 'rent' | undefined) ?? null;
+        this.lockedIntent.set(intent);
+
+        // Pre-fill in-page filter signals from query params so the visible
+        // controls reflect the URL state. User can still tweak from there.
+        const type = params.get('type');
+        const city = params.get('city');
+        const minPrice = params.get('minPrice');
+        const maxPrice = params.get('maxPrice');
+
+        if (type) this.selectedType.set(type);
+        if (city) this.selectedCity.set(city);
+        if (minPrice != null && maxPrice != null) {
+          this.priceRange.set([Number(minPrice), Number(maxPrice)]);
+        } else if (minPrice != null) {
+          // "5Cr+" style brackets have no ceiling — keep the existing upper
+          // bound from the slider's dynamic ceiling.
+          this.priceRange.set([Number(minPrice), this.priceRange()[1]]);
         }
-      },
-      error: (err) => console.error('Property API Error:', err)
-    });
-  
+
+        // Build the server-side filter payload. Intent is the only one
+        // strictly necessary on the server — type/city/price could be
+        // applied client-side, but pushing them down keeps payloads small
+        // when datasets grow.
+        this.propertyService.getProperties({
+          intent: intent ?? undefined,
+          type: type ?? undefined,
+          city: city ?? undefined,
+          minPrice: minPrice != null ? Number(minPrice) : undefined,
+          maxPrice: maxPrice != null ? Number(maxPrice) : undefined,
+        }).subscribe({
+          next: (data: Property[]) => {
+            this.allProperties.set(data);
+            // Bump the slider's upper bound to the new ceiling — but only if
+            // the user is still parked at the previous ceiling (i.e. they
+            // haven't narrowed the range).
+            const ceiling = this.priceCeiling();
+            const [lo, hi] = this.priceRange();
+            if (hi < ceiling && hi <= HomePageComponent.PRICE_CEILING_FLOOR) {
+              this.priceRange.set([lo, ceiling]);
+            }
+          },
+          error: (err) => console.error('Property API Error:', err)
+        });
+      });
+
     this.agentService.getAgents().subscribe({
       next: (data: Agent[]) => {
         this.agents.set(data);

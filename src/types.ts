@@ -14,7 +14,9 @@ export interface Property {
   listerId: string;        
   agentId: string [];
   amenities: string[];
-  intents?: ('buy' | 'sell' | 'rent' | 'invest')[];
+  // Single value matching the backend column. Backfilled rows default to
+  // 'sell'. ('buy' is a route name in the navbar; the stored value is 'sell'.)
+  listingIntent?: 'sell' | 'rent';
   isFeatured?: boolean;
   expresswayProximity?: boolean;
   agents?: Agent[];

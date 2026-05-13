@@ -1,21 +1,34 @@
 import { Property } from '../../types';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { appConfig } from '../config/app-config';
 
+export interface PropertyFilters {
+  intent?: 'sell' | 'rent';
+  type?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  city?: string;
+}
 
 @Injectable({
   providedIn: 'root',
 })
 export class PropertyService {
-    
+
   private http = inject(HttpClient);
   private apiUrl = `${appConfig.baseUrl}/api/property`;
 
-  getProperties(): Observable<Property[]> {
-      console.log(`Base URL : ${this.apiUrl}`);
-      return this.http.get<Property[]>(this.apiUrl);
+  getProperties(filters: PropertyFilters = {}): Observable<Property[]> {
+      let params = new HttpParams();
+      if (filters.intent) params = params.set('intent', filters.intent);
+      if (filters.type) params = params.set('type', filters.type);
+      if (filters.minPrice != null) params = params.set('minPrice', String(filters.minPrice));
+      if (filters.maxPrice != null) params = params.set('maxPrice', String(filters.maxPrice));
+      if (filters.city) params = params.set('city', filters.city);
+      console.log(`Base URL : ${this.apiUrl} filters=${params.toString()}`);
+      return this.http.get<Property[]>(this.apiUrl, { params });
     }
 
   getPropertyById(id: string): Observable<Property> {

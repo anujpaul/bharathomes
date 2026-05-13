@@ -54,6 +54,73 @@ export class NavbarComponent {
   // Desktop "List Property" dropdown
   isListMenuOpen = signal(false);
 
+  // Desktop Buy/Rent mega-menus. Only one open at a time so they swap when
+  // the user moves between them rather than stacking.
+  openMegaMenu = signal<null | 'buy' | 'rent'>(null);
+
+  /**
+   * The mega-menu shape is identical for Buy and Rent — only the intent
+   * suffix in the route and the budget brackets differ. Defining once
+   * here keeps the template a single template branch instead of two
+   * near-duplicate ones.
+   *
+   * Each entry navigates to /buy or /rent with the corresponding query
+   * param set. The listing page reads intent from the route data and
+   * the rest from queryParams.
+   */
+  readonly propertyTypes = [
+    { label: 'Apartment / Flat', value: 'Apartment', emoji: '🏢' },
+    { label: 'Villa / House',    value: 'Villa',     emoji: '🏡' },
+    { label: 'Plot / Land',      value: 'Plot',      emoji: '🌳' },
+    { label: 'Commercial',       value: 'Commercial', emoji: '🏬' },
+  ];
+
+  readonly buyBudgets = [
+    { label: 'Under ₹50L',  min: 0,        max: 5_000_000 },
+    { label: '₹50L – ₹1Cr', min: 5_000_000, max: 10_000_000 },
+    { label: '₹1 – ₹2Cr',   min: 10_000_000, max: 20_000_000 },
+    { label: '₹2 – ₹5Cr',   min: 20_000_000, max: 50_000_000 },
+    { label: '₹5Cr +',      min: 50_000_000, max: null as number | null },
+  ];
+
+  readonly rentBudgets = [
+    { label: 'Under ₹15K',     min: 0,      max: 15_000 },
+    { label: '₹15K – ₹30K',    min: 15_000, max: 30_000 },
+    { label: '₹30K – ₹60K',    min: 30_000, max: 60_000 },
+    { label: '₹60K – ₹1L',     min: 60_000, max: 100_000 },
+    { label: '₹1L +',          min: 100_000, max: null as number | null },
+  ];
+
+  // UP cities — hardcoded for now since the project is UP-focused. Swap
+  // this for a "top cities by listing count" API call when the dataset is
+  // big enough that a fixed list feels limiting.
+  readonly cities = [
+    'Lucknow', 'Noida', 'Ghaziabad', 'Agra', 'Kanpur', 'Varanasi',
+  ];
+
+  /** Open / toggle a mega-menu, closing the other if needed. */
+  toggleMega(menu: 'buy' | 'rent', ev: MouseEvent) {
+    ev.stopPropagation();
+    this.openMegaMenu.update(curr => curr === menu ? null : menu);
+  }
+
+  /** Navigate to /buy or /rent with the chosen filter param set. */
+  goToListings(
+    intent: 'buy' | 'rent',
+    params: { type?: string; minPrice?: number; maxPrice?: number | null; city?: string } = {},
+  ) {
+    this.openMegaMenu.set(null);
+    this.isMenuOpen = false;
+
+    const queryParams: Record<string, string> = {};
+    if (params.type) queryParams['type'] = params.type;
+    if (params.city) queryParams['city'] = params.city;
+    if (params.minPrice != null) queryParams['minPrice'] = String(params.minPrice);
+    if (params.maxPrice != null) queryParams['maxPrice'] = String(params.maxPrice);
+
+    this.router.navigate([`/${intent}`], { queryParams });
+  }
+
   constructor() {
     // Listen for global requests to open the auth modal (e.g. from the home page)
     effect(() => {
@@ -83,19 +150,19 @@ export class NavbarComponent {
 
   toggleListMenu() { this.isListMenuOpen.update(v => !v); }
 
-  // Close the dropdown when the user clicks anywhere outside the navbar
+  // Close any open dropdown when the user clicks outside the navbar.
   @HostListener('document:click', ['$event'])
   onDocumentClick(ev: MouseEvent) {
-    if (!this.isListMenuOpen()) return;
-    if (!this.host.nativeElement.contains(ev.target as Node)) {
-      this.isListMenuOpen.set(false);
-    }
+    if (this.host.nativeElement.contains(ev.target as Node)) return;
+    this.isListMenuOpen.set(false);
+    this.openMegaMenu.set(null);
   }
 
-  // Close on Escape too
+  // Close on Escape too.
   @HostListener('document:keydown.escape')
   onEscape() {
     this.isListMenuOpen.set(false);
+    this.openMegaMenu.set(null);
   }
 
   toggleMenu() { this.isMenuOpen = !this.isMenuOpen; }
