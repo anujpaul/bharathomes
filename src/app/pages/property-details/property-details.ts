@@ -59,7 +59,19 @@ interface Person {
               <img [src]="property.images[0]" (click)="openLightbox(property, 0)" alt="Main">
             }
             @else {
-              <video controls autoplay muted loop playsinline preload="metadata"  [src]="property.images[0]" style="width:100%; height:320px; object-fit:cover;"></video>
+              <!--
+                muted as an HTML attribute is only an INITIAL hint; once
+                Angular sets [src] the browser may reset it. [muted]="true"
+                drives the JS property on every change-detection pass, and
+                the (loadedmetadata) handler re-asserts it after the video
+                pipeline initialises — belt and suspenders for autoplay.
+              -->
+              <video #heroVid
+                     controls autoplay loop playsinline preload="metadata"
+                     [src]="property.images[0]"
+                     [muted]="true"
+                     (loadedmetadata)="heroVid.muted = true"
+                     style="width:100%; height:320px; object-fit:cover;"></video>
             }
           </div>
           <div class="thumbnail-grid">
@@ -68,7 +80,13 @@ interface Person {
               @if (!isVideo(media)) {
                 <img [src]="media" (click)="openLightbox(property, i + 1)" alt="Thumb">
               }@else {
-                <video autoplay muted loop playsinline [src]="media" (click)="openLightbox(property, i + 1)" muted style="width:100%; height:140px; object-fit:cover; cursor:pointer;"></video>
+                <video #thumbVid
+                       autoplay loop playsinline
+                       [src]="media"
+                       [muted]="true"
+                       (loadedmetadata)="thumbVid.muted = true"
+                       (click)="openLightbox(property, i + 1)"
+                       style="width:100%; height:140px; object-fit:cover; cursor:pointer;"></video>
               }
                 @if (i === 3 && property.images.length > 5) {
                   <div class="more-overlay" (click)="openLightbox(property, 5); $event.stopPropagation()">
