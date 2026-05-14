@@ -8,12 +8,14 @@ export interface Property {
   pincode?: string;
   beds: number;
   baths: number;
+  listedSince?: string;
   sqft: number;
   type: 'Apartment' | 'Villa' | 'Plot' | 'Commercial';
   images: string[];
   listerId: string;        
   agentId: string [];
   amenities: string[];
+  builtYear?: number;
   // Single value matching the backend column. Backfilled rows default to
   // 'sell'. ('buy' is a route name in the navbar; the stored value is 'sell'.)
   listingIntent?: 'sell' | 'rent';

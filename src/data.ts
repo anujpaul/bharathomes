@@ -12,6 +12,7 @@ export const PROPERTIES: Property[] = [
     baths: 4,
     sqft: 3200,
     listerId: "Sunny Paul",
+    listedSince: "10 Days",
     amenities: [""],
     type: 'Apartment',
     images: ['https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80'],

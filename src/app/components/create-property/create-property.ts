@@ -311,6 +311,19 @@ const AMENITIES_OPTIONS = [
                   </div>
                 </div>
               </div>
+              
+              <!-- new: Year Built dropdown -->
+              <div class="field-group">
+                <label class="field-label">Year Built</label>
+                <select class="field-input" formControlName="builtYear">
+                  <option value="">Not Selected</option>
+                  @for (year of yearOptions; track year) {
+                    <option [value]="year">{{ year }}</option>
+                  }
+                </select>
+                <span class="field-hint">Year of construction</span>
+              </div>
+
 
               @if (form.get('price')?.value && form.get('sqft')?.value) {
                 <div class="insight-card">
@@ -400,6 +413,10 @@ const AMENITIES_OPTIONS = [
                 <div class="summary-item">
                   <span class="summary-label">Title</span>
                   <span class="summary-val">{{ form.get('title')?.value || '—' }}</span>
+                </div>
+                <div class="summary-item">
+                  <span class="summary-label">Year Built</span>
+                  <span class="summary-val">{{ form.get('builtYear')?.value || '—' }}</span>
                 </div>
                 <div class="summary-item">
                   <span class="summary-label">Type</span>
@@ -765,6 +782,14 @@ export class CreateProperty implements OnInit {
     { value: 'SouthWest', icon: '↙️', label: 'South-West' },
   ];
 
+  readonly yearOptions = (() => {
+    const currentYear = new Date().getFullYear();
+    const years = [];
+    for (let y = 1947; y <= currentYear; y++) years.push(y);
+    return years;
+  })();
+
+
   // ── Signals ────────────────────────────────────────────────────────────
   currentStep      = signal(1);
   isDragging       = signal(false);
@@ -803,6 +828,7 @@ export class CreateProperty implements OnInit {
     sqft:  [null, [Validators.required, Validators.min(1)]],
     beds:  [2,    [Validators.required, Validators.min(0)]],
     baths: [2,    [Validators.required, Validators.min(0)]],
+    builtYear: [null], 
   });
 
   // ── Lifecycle ──────────────────────────────────────────────────────────
@@ -845,6 +871,8 @@ export class CreateProperty implements OnInit {
         this.reraDoc.set(null);
       }
     });
+
+    
   }
 
   // ── Field helpers ──────────────────────────────────────────────────────
@@ -1011,6 +1039,7 @@ export class CreateProperty implements OnInit {
       sqft:                   v.sqft,
       beds:                   v.beds,
       baths:                  v.baths,
+      builtYear:              v.builtYear || null,
       isFeatured:             this.isPaid && v.isFeatured,
       expresswayProximity:    v.expresswayProximity,
       isReraRegistered:       v.isReraRegistered,

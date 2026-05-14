@@ -55,6 +55,17 @@ interface Person {
         <!-- GALLERY -->
         <div class="gallery-container">
           <div class="hero-image">
+            <!-- "Listed N days ago" pill + Apply CTA, overlaid on top-left
+                 of the hero. Only renders when the backend supplied the
+                 listedSince string. -->
+            @if (property.listedSince) {
+              <div class="hero-badges">
+                <span class="badge-listed">{{ property.listedSince }} ago</span>
+                <!-- <button type="button" class="badge-apply" (click)="applyInstantly(property)">
+                  Apply instantly
+                </button> -->
+              </div>
+            }
             @if (!isVideo(property.images[0])) {
               <img [src]="property.images[0]" (click)="openLightbox(property, 0)" alt="Main">
             }
@@ -172,8 +183,30 @@ interface Person {
               <div class="spec-label">Sq.ft</div>
             </div>
           </div>
-
+          
+          @if (property?.builtYear) {
           <div class="divider"></div>
+
+          <div class="specs-row">
+            
+            <div class="spec-item">
+              <div class="spec-value">{{ property.builtYear }}</div>
+              <div class="spec-label">Built Year</div>
+          </div>
+            <!-- <div class="spec-divider"></div> -->
+            <div class="spec-item">
+              <!-- <div class="spec-value">{{ property.baths }}</div> -->
+              <!-- <div class="spec-label">Baths</div> -->
+            </div>
+            <!-- <div class="spec-divider"></div> -->
+            <div class="spec-item">
+              <!-- <div class="spec-value">{{ property.sqft }}</div>
+              <div class="spec-label">Sq.ft</div> -->
+            </div>
+          </div>
+          }
+
+          <div class="divider"></div> 
 
           <!-- AGENTS + LISTER SECTION -->
           <div class="lister-section">
@@ -236,7 +269,45 @@ interface Person {
   
     /* GALLERY */
     .gallery-container { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+    /* position: relative so the badges can absolute-position over the
+       hero image/video. */
+    .hero-image { position: relative; }
     .hero-image img { width: 100%; height: 320px; object-fit: cover; border-radius: 10px; cursor: pointer; display: block; }
+
+    /* Overlay pills (top-left of hero) — listing age + Apply CTA. */
+    .hero-badges {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      z-index: 5;
+      pointer-events: none; /* Let clicks through to the hero by default */
+    }
+    .badge-listed,
+    .badge-apply {
+      pointer-events: auto; /* Re-enable for the pills themselves */
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 9999px;
+      line-height: 1;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+    .badge-listed {
+      background: rgba(255, 255, 255, 0.95);
+      color: #1a1a2e;
+      backdrop-filter: blur(4px);
+    }
+    .badge-apply {
+      background: #2c7be5;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .badge-apply:hover { background: #1a63c5; }
     .thumbnail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .thumbnail-wrapper { position: relative; cursor: pointer; }
     .thumbnail-wrapper img { width: 100%; height: 140px; object-fit: cover; border-radius: 8px; display: block; }
@@ -354,6 +425,17 @@ export class PropertyDetailsComponent implements OnInit {
     // (SAS tokens append `?sp=...&sig=...`).
     return /\.(mp4|webm|ogg|mov|avi|mkv|m4v)(\?|$)/i.test(url);
   }
+
+  /**
+   * Placeholder for the "Apply instantly" CTA on the hero. Wire this up
+   * when the apply/enquiry flow exists — e.g. open a contact-agent modal,
+   * navigate to /apply/{propertyId}, or post directly to a leads endpoint.
+   * Kept as a stub so the button doesn't throw on click today.
+   */
+  // applyInstantly(property: Property) {
+  //   console.log('Apply instantly clicked for property', property.id);
+  //   // TODO: open enquiry modal / route to /apply/:id
+  // }
 
   /**
    * Unified people list shown in the side panel.
