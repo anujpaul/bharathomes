@@ -184,25 +184,30 @@ interface Person {
             </div>
           </div>
           
-          @if (property?.builtYear) {
+          @if (property?.builtYear || property?.listingIntent) {  
           <div class="divider"></div>
-
+          
           <div class="specs-row">
-            
+          @if (property?.builtYear){
             <div class="spec-item">
               <div class="spec-value">{{ property.builtYear }}</div>
               <div class="spec-label">Built Year</div>
           </div>
-            <!-- <div class="spec-divider"></div> -->
+          }
+            <div class="spec-divider"></div>
+          
+            @if (property?.listingIntent) {
             <div class="spec-item">
-              <!-- <div class="spec-value">{{ property.baths }}</div> -->
-              <!-- <div class="spec-label">Baths</div> -->
+              <div class="spec-value">{{ property.listingIntent }}</div>
+              <div class="spec-label">Listed for</div>
             </div>
+            }
+            <!-- } -->
             <!-- <div class="spec-divider"></div> -->
-            <div class="spec-item">
-              <!-- <div class="spec-value">{{ property.sqft }}</div>
-              <div class="spec-label">Sq.ft</div> -->
-            </div>
+            <!-- <div class="spec-item">
+              <div class="spec-value">{{ property.sqft }}</div>
+              <div class="spec-label">Sq.ft</div>
+            </div> -->
           </div>
           }
 
