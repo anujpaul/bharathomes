@@ -45,6 +45,17 @@ import { InrPricePipe } from '@/app/pipes/inr-price.pipe';
             {{property.type}}
           </span>
         </div>
+
+        <!-- Days-in-market pill, top-right. Mirrors the listedSince badge
+             on property-details.ts so the metric is visible at a glance
+             without crowding the existing top-left badges. -->
+        @if (property.listedSince) {
+          <div class="absolute top-4 right-4">
+            <span class="bg-white/90 backdrop-blur-md text-gray-700 text-xs font-semibold px-2.5 py-1 rounded-full shadow-sm">
+              🕒 {{property.listedSince}} ago
+            </span>
+          </div>
+        }
       </div>
 
       <div class="p-6">
@@ -87,7 +98,8 @@ import { InrPricePipe } from '@/app/pipes/inr-price.pipe';
 
         <div class="flex items-center justify-between">
           <div class="text-2xl font-black text-gray-900">
-            {{ property.price | inrPrice }}
+            {{ property.price | inrPrice }}<!--
+            -->@if (isRent) {<span class="text-sm text-gray-500 font-medium ml-1">/ month</span>}
           </div>
           <a [routerLink]="['/property', property.id]"
             class="bg-gray-900 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-blue-600 transition-colors">
@@ -123,5 +135,15 @@ export class PropertyCardComponent {
   // becomes `m.type === 'video'` and the regex goes away.
   isVideo(url: string): boolean {
     return /\.(mp4|mov|webm|m4v)(\?|$)/i.test(url);
+  }
+
+  /**
+   * Case-insensitive check — at least one row in the DB has "Rent" with a
+   * capital R because the normalization in PropertyService.CreatePropertyAsync
+   * was added after that listing was created. Comparing lowercased on every
+   * read defends against any future inconsistency too.
+   */
+  get isRent(): boolean {
+    return this.property?.listingIntent?.toLowerCase() === 'rent';
   }
 }

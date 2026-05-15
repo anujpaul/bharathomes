@@ -82,4 +82,8 @@ export class PropertyService {
       formData.append('file', file, file.name);
       return this.http.post<void>(`${this.apiUrl}/${propertyId}/rera-doc`, formData);
     }
+
+    deleteProperty(propertyId: string): Observable<boolean> {
+      return this.http.delete<boolean>(`${this.apiUrl}/${propertyId}`, { withCredentials: true });
+    }
 }

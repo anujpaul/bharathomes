@@ -44,6 +44,9 @@ interface Person {
           <button class="edit-toggle" (click)="editMode = !editMode">
             {{ editMode ? '✕ Cancel' : '✏️ Edit Listing' }}
           </button>
+          <button class="edit-toggle" (click)="deleteProperty()">
+            {{'✕ Delete Listing' }}
+          </button>
           @if (editMode && pendingChanges) {
             <button class="save-btn" (click)="saveChanges(property)">💾 Save Changes</button>
           }
@@ -137,7 +140,10 @@ interface Person {
           @if (editMode) {
             <input class="edit-input price-input" type="number" [(ngModel)]="editData.price" (ngModelChange)="pendingChanges = true" placeholder="Price">
           } @else {
-            <div class="price-tag">{{ property.price | inrPrice }}</div>
+            <div class="price-tag">
+              {{ property.price | inrPrice }}<!--
+              -->@if (isRent(property)) {<span class="price-suffix"> / month</span>}
+            </div>
           }
 
           <!-- Editable title -->
@@ -321,6 +327,7 @@ interface Person {
     /* SIDE PANEL */
     .side-panel { width: 300px; flex-shrink: 0; background: #fff; border: 1px solid #e8eaed; border-radius: 12px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); display: flex; flex-direction: column; gap: 14px; }
     .price-tag { font-size: 1.5rem; font-weight: 700; color: #1a1a2e; }
+    .price-suffix { font-size: 0.95rem; font-weight: 500; color: #666; }
     .property-title { font-size: 1rem; font-weight: 500; color: #444; margin: 0; line-height: 1.4; }
     .divider { height: 1px; background: #f0f0f0; }
     .detail-row { display: flex; align-items: flex-start; gap: 10px; }
@@ -425,6 +432,7 @@ export class PropertyDetailsComponent implements OnInit {
   currentUser = this.authService.authResponse; // signal or property from your auth service
   listerId = '';
   lister: UserProfile | null = null;
+  deleteListing: false | (() => void) = false;
   isVideo(url: string): boolean {
     // Match the extension whether the URL ends there or has a query string
     // (SAS tokens append `?sp=...&sig=...`).
@@ -441,6 +449,16 @@ export class PropertyDetailsComponent implements OnInit {
   //   console.log('Apply instantly clicked for property', property.id);
   //   // TODO: open enquiry modal / route to /apply/:id
   // }
+
+  /**
+   * Case-insensitive intent check. At least one row in the DB has "Rent"
+   * with a capital R because the normalization in PropertyService was
+   * added later — comparing lowercased on every read defends against any
+   * pre-normalization rows and any future inconsistency.
+   */
+  isRent(property: Property): boolean {
+    return property?.listingIntent?.toLowerCase() === 'rent';
+  }
 
   /**
    * Unified people list shown in the side panel.
@@ -628,6 +646,20 @@ export class PropertyDetailsComponent implements OnInit {
           this.editData = { ...p };
           this.cdr.detectChanges();
         });
+      }
+    });
+  }
+
+  deleteProperty() {
+    if (!confirm('Are you sure you want to delete this listing? This action cannot be undone.')) return;
+    this.propertyService.deleteProperty(this.route.snapshot.paramMap.get('id')!).subscribe({
+      next: () => {
+        alert('Listing deleted successfully.');
+        // Navigate back to homepage or listings page after deletion
+        window.location.href = '/';
+      },
+      error: () => {
+        alert('Failed to delete the listing. Please try again later.');
       }
     });
   }

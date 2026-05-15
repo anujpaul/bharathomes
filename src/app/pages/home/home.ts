@@ -1,19 +1,15 @@
 import { AgentCardComponent } from '@/app/components/agent-card/agent-card.component';
 import { FiltersComponent } from '@/app/components/filters/filters.component';
-import { FooterComponent } from '@/app/components/footer/footer.component';
 import { HeroComponent } from '@/app/components/hero/hero.component';
-import { NavbarComponent } from '@/app/components/navbar/navbar.component';
 import { PropertyCardComponent } from '@/app/components/property-card/property-card.component';
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
-import { PropertyDetailsComponent } from '../property-details/property-details';
+import { Component, computed, effect, inject, OnInit, signal } from '@angular/core';
 import { PropertyService } from '@/app/services/property-service';
 import { AgentService } from '@/app/services/agent-service';
 import { AuthService } from '@/app/services/auth.service';
 import { Agent, Property } from '@/types';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { combineLatest } from 'rxjs';
-import { CreateProperty } from '@/app/components/create-property/create-property';
 
 @Component({
   selector: 'app-home',
@@ -102,6 +98,64 @@ private propertyService = inject(PropertyService);
   // get featuredProperties(): Property[] {
   //   return PROPERTIES.filter(p => p.isFeatured);
   // }
+  // ── Pagination ──────────────────────────────────────────────────────
+  // Page state lives here so the pageSize and page-window logic stay in
+  // one place. Resets to 1 whenever the underlying filtered set changes.
+  readonly pageSize = 12;
+  currentPage = signal(1);
+
+  totalPages = computed(() =>
+    Math.max(1, Math.ceil(this.filteredProperties().length / this.pageSize))
+  );
+
+  pagedProperties = computed(() => {
+    const page = Math.min(this.currentPage(), this.totalPages());
+    const start = (page - 1) * this.pageSize;
+    return this.filteredProperties().slice(start, start + this.pageSize);
+  });
+
+  /**
+   * Show up to ~7 page numbers with "…" gaps, like:
+   *   1 2 3 4 5 … 12         (when on early pages)
+   *   1 … 5 6 7 … 12         (when in the middle)
+   *   1 … 8 9 10 11 12       (when near the end)
+   * Returns null entries to render as ellipses in the template.
+   */
+  pageWindow = computed<(number | null)[]>(() => {
+    const total = this.totalPages();
+    const current = this.currentPage();
+    if (total <= 7) {
+      return Array.from({ length: total }, (_, i) => i + 1);
+    }
+    const window: (number | null)[] = [1];
+    const left = Math.max(2, current - 1);
+    const right = Math.min(total - 1, current + 1);
+    if (left > 2) window.push(null);
+    for (let i = left; i <= right; i++) window.push(i);
+    if (right < total - 1) window.push(null);
+    window.push(total);
+    return window;
+  });
+
+  goToPage(page: number) {
+    const target = Math.max(1, Math.min(page, this.totalPages()));
+    this.currentPage.set(target);
+    // Scroll the listing area back into view so the user sees page 1 of
+    // results, not the bottom of page 1 they were looking at.
+    window.scrollTo({ top: document.querySelector('section')?.offsetTop ?? 0, behavior: 'smooth' });
+  }
+
+  // Reset to page 1 whenever the filtered dataset changes — otherwise the
+  // user can be parked on page 5 with 0 results after narrowing filters.
+  // Using an effect keeps this reactive without manually resetting in every
+  // setter / route subscription.
+  private _resetPageOnFilterChange = effect(() => {
+    // Read the dependency we care about — length is the smallest signal that
+    // changes when the underlying set does.
+    const _ = this.filteredProperties().length;
+    this.currentPage.set(1);
+  });
+
   filteredProperties = computed(() => {
     const query = this.searchQuery().toLowerCase();
     const city = this.selectedCity();

@@ -66,10 +66,51 @@
             </div>
             @if (filteredProperties().length > 0) {
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                @for (property of filteredProperties(); track property.id) {
+                @for (property of pagedProperties(); track property.id) {
                 <app-property-card [property]="property"></app-property-card>
                 }
             </div>
+
+            <!-- Pagination — only render when there's more than one page.
+                 Page numbers use the windowed list (1 … 5 6 7 … 12) for
+                 sensible spacing on long result sets. -->
+            @if (totalPages() > 1) {
+              <nav class="flex items-center justify-center gap-2 mt-12 select-none" aria-label="Pagination">
+                <button type="button"
+                        (click)="goToPage(currentPage() - 1)"
+                        [disabled]="currentPage() === 1"
+                        class="px-3 py-2 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                  ← Prev
+                </button>
+
+                @for (p of pageWindow(); track $index) {
+                  @if (p === null) {
+                    <span class="px-2 text-gray-400">…</span>
+                  } @else {
+                    <button type="button"
+                            (click)="goToPage(p)"
+                            [attr.aria-current]="currentPage() === p ? 'page' : null"
+                            [class.bg-blue-600]="currentPage() === p"
+                            [class.text-white]="currentPage() === p"
+                            [class.shadow-md]="currentPage() === p"
+                            class="min-w-[40px] px-3 py-2 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors">
+                      {{ p }}
+                    </button>
+                  }
+                }
+
+                <button type="button"
+                        (click)="goToPage(currentPage() + 1)"
+                        [disabled]="currentPage() === totalPages()"
+                        class="px-3 py-2 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                  Next →
+                </button>
+              </nav>
+
+              <p class="text-center text-xs text-gray-500 mt-3">
+                Page {{ currentPage() }} of {{ totalPages() }} · {{ filteredProperties().length }} properties total
+              </p>
+            }
             } @else {
             <div class="py-20 text-center">
                 <div class="bg-gray-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
