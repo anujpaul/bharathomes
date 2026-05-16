@@ -27,20 +27,29 @@ import { InrPricePipe } from '@/app/pipes/inr-price.pipe';
             </swiper-slide>
           }
         </swiper-container>
-        <div class="absolute top-4 left-4 flex gap-2">
+        <!-- All badge wrappers need z-20 — Swiper injects its internal
+             elements at z-index 10 after Angular renders, which silently
+             covers any absolute-positioned sibling without an explicit
+             higher z-index. -->
+        <div class="absolute top-4 left-4 flex gap-2 z-20">
           @if (property.isFeatured) {
             <span class="bg-blue-600 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full flex items-center gap-1 shadow-lg">
               <lucide-icon [name]="StarIcon" class="w-3 h-3 fill-current"></lucide-icon>
               Featured
             </span>
           }
-          @if (property.expresswayProximity) {
-            <span class="bg-emerald-500 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full shadow-lg">
-              Expressway Access
+          @if (property.isReraRegistered) {
+            <span class="bg-emerald-500 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full flex items-center gap-1 shadow-lg"
+                  [title]="property.reraRegistrationNumber ? 'RERA: ' + property.reraRegistrationNumber : 'RERA Approved'">
+              <!-- Inline checkmark — no extra lucide import needed. -->
+              <svg viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3">
+                <path fill-rule="evenodd" d="M16.7 5.3a1 1 0 010 1.4l-7 7a1 1 0 01-1.4 0l-3-3a1 1 0 011.4-1.4L9 11.6l6.3-6.3a1 1 0 011.4 0z" clip-rule="evenodd" />
+              </svg>
+              RERA Approved
             </span>
           }
         </div>
-        <div class="absolute bottom-4 left-4">
+        <div class="absolute bottom-4 left-4 z-20">
           <span class="bg-white/90 backdrop-blur-md text-gray-900 px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm">
             {{property.type}}
           </span>
@@ -48,9 +57,14 @@ import { InrPricePipe } from '@/app/pipes/inr-price.pipe';
 
         <!-- Days-in-market pill, top-right. Mirrors the listedSince badge
              on property-details.ts so the metric is visible at a glance
-             without crowding the existing top-left badges. -->
+             without crowding the existing top-left badges.
+
+             z-20 is REQUIRED here: Swiper initializes after Angular renders,
+             then injects its own internal elements at z-index 10. Without
+             explicit z-20 the pill briefly appears, then gets covered the
+             moment Swiper finishes hydrating. -->
         @if (property.listedSince) {
-          <div class="absolute top-4 right-4">
+          <div class="absolute top-4 right-4 z-20">
             <span class="bg-white/90 backdrop-blur-md text-gray-700 text-xs font-semibold px-2.5 py-1 rounded-full shadow-sm">
               🕒 {{property.listedSince}} ago
             </span>

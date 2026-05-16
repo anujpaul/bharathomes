@@ -21,6 +21,8 @@ export interface Property {
   listingIntent?: 'sell' | 'rent';
   isFeatured?: boolean;
   expresswayProximity?: boolean;
+  isReraRegistered?: boolean;
+  reraRegistrationNumber?: string | null;
   agents?: Agent[];
 }
 
