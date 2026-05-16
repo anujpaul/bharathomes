@@ -7,6 +7,7 @@ import { Observable, forkJoin, switchMap } from 'rxjs';
 import { LightboxService } from '@/app/services/lightbox-service';
 import { AgentService } from '@/app/services/agent-service';
 import { PropertyImageUploadComponent } from '@/app/components/property-image-upload.component/property-image-upload.component';
+import { PropertyMapComponent } from '@/app/components/property-map/property-map.component';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '@/app/services/auth.service';
 import { InrPricePipe } from '@/app/pipes/inr-price.pipe';
@@ -33,7 +34,7 @@ interface Person {
 @Component({
   selector: 'app-property-details',
   standalone: true,
-  imports: [AsyncPipe, DecimalPipe, RouterLink, FormsModule, InrPricePipe],
+  imports: [AsyncPipe, DecimalPipe, RouterLink, FormsModule, InrPricePipe, PropertyMapComponent],
   template: `
     @if (property$ | async; as property) {
     <div class="page-container">
@@ -131,6 +132,14 @@ interface Person {
               </div>
             </div>
           }
+
+          <!-- Map section. Renders directly under the gallery in the
+               left column. PropertyMapComponent handles the null-coords
+               case internally, so we always render the wrapper. -->
+          <div class="map-section">
+            <h3 class="map-heading">Location</h3>
+            <app-property-map [lat]="property.latitude" [lng]="property.longitude"></app-property-map>
+          </div>
         </div>
 
         <!-- SIDE PANEL -->
@@ -383,6 +392,15 @@ interface Person {
     /* UPLOAD ZONE */
     .upload-zone { border: 2px dashed #2c7be5; border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; color: #2c7be5; font-size: 0.9rem; margin-top: 4px; }
     .upload-zone:hover { background: #f0f6ff; }
+
+    /* Map section sits in the gallery column under the thumbnails. */
+    .map-section { margin-top: 16px; }
+    .map-heading {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #1a1a2e;
+      margin: 0 0 10px 0;
+    }
     .set-hero-btn {
       position: absolute;
       bottom: 6px;
@@ -569,7 +587,14 @@ export class PropertyDetailsComponent implements OnInit {
 
   saveChanges(property: Property) {
     if (!this.pendingChanges) return;
-    this.propertyService.updateProperty(property.id, this.editData).subscribe({
+
+    const cleanData: any = { ...this.editData };
+
+    delete cleanData.images;
+    delete cleanData.agents;
+    delete cleanData.amenities;
+
+    this.propertyService.updateProperty(property.id, cleanData).subscribe({
       next: () => {
         this.pendingChanges = false;
         this.editMode = false;

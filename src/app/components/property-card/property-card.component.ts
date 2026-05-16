@@ -5,11 +5,12 @@ import { Property } from '../../../types';
 import { LightboxService } from '../../services/lightbox-service';
 import { RouterLink } from '@angular/router';
 import { InrPricePipe } from '@/app/pipes/inr-price.pipe';
+import { LeafletModule } from '@bluehalo/ngx-leaflet';
 
 @Component({
   selector: 'app-property-card',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule, RouterLink, InrPricePipe],
+  imports: [CommonModule, LucideAngularModule, RouterLink, InrPricePipe, LeafletModule],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   template: `
     <div class="group bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300">

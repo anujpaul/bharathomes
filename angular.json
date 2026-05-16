@@ -31,7 +31,8 @@
               "src/web.config" 
             ],
             "styles": [
-              "src/index.css"
+              "src/index.css",
+              "./node_modules/leaflet/dist/leaflet.css"
             ],
             "scripts": []
           },

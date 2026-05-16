@@ -23,6 +23,8 @@ export interface Property {
   expresswayProximity?: boolean;
   isReraRegistered?: boolean;
   reraRegistrationNumber?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   agents?: Agent[];
 }
 
