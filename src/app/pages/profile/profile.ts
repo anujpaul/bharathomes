@@ -20,7 +20,8 @@ const USER_TYPES = [
   
   template: `
   
-  <div class="profile-wrapper">
+  <!-- <div class="profile-wrapper"> -->
+  <div class="profile-wrapper text-gray-700">
     @if (profile()) {
       <div class="profile-card">
 
@@ -79,9 +80,20 @@ const USER_TYPES = [
             <label>Name</label>
             <input [(ngModel)]="editModel.name" />
             <label>Email</label>
-            <input [(ngModel)]="editModel.email" disabled />
+
+            <input class = "text-gray-300" [(ngModel)]="editModel.email" disabled />
             <label>Phone</label>
-            <input [(ngModel)]="editModel.phone" />
+            <div class="phone-row">
+              <select [(ngModel)]="selectedDialCode" class="dial-select">
+                @for (dc of dialCodes; track dc.code) {
+                  <option [value]="dc.code">{{ dc.label }}</option>
+                }
+              </select>
+              <input [(ngModel)]="editModel.phone"
+                     type="tel"
+                     placeholder="Phone number"
+                     class="phone-input" />
+            </div>
             <label>Account Type</label>
             <div class="type-grid">
               @for (type of userTypes; track type.value) {
@@ -135,6 +147,23 @@ const USER_TYPES = [
     .btn { padding: 10px 14px; border-radius: 8px; border: none; cursor: pointer; margin-top: 12px; }
     .primary { background: #4f46e5; color: white; }
     .form { display: flex; flex-direction: column; gap: 10px; }
+
+    /* Phone with country code — keep dropdown narrow so the actual
+       number field gets the real estate. */
+    .phone-row { display: flex; gap: 8px; }
+    .dial-select {
+      flex: 0 0 170px;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      background: #fff;
+      font-size: 0.9rem;
+    }
+    .phone-input { flex: 1; }
+    @media (max-width: 480px) {
+      .phone-row { flex-direction: column; }
+      .dial-select { flex: 1 1 auto; }
+    }
     input { padding: 10px; border: 1px solid #ddd; border-radius: 8px; outline: none; }
     input:focus { border-color: #4f46e5; }
     .actions { display: flex; justify-content: space-between; margin-top: 16px; }
@@ -195,6 +224,49 @@ export class ProfileComponent {
 
   editModel: Partial<UserProfile> = { name: '', email: '', phone: '', userRole: undefined };
 
+  /**
+   * Country code dial code state. Kept separate from editModel.phone
+   * for clean UX (dropdown + input); concatenated on save into a single
+   * "+91 9876543210" string that lands in editModel.phone.
+   *
+   * The list is the most commonly-encountered countries for an Indian
+   * real-estate site (NRI buyers in US/UK/UAE/SG/AU/CA, plus near
+   * neighbours). Add more as your audience expands.
+   */
+  selectedDialCode = '+91';
+  readonly dialCodes = [
+    { code: '+91',  label: '🇮🇳 +91 India' },
+    { code: '+1',   label: '🇺🇸 +1 USA / Canada' },
+    { code: '+44',  label: '🇬🇧 +44 UK' },
+    { code: '+971', label: '🇦🇪 +971 UAE' },
+    { code: '+65',  label: '🇸🇬 +65 Singapore' },
+    { code: '+61',  label: '🇦🇺 +61 Australia' },
+    { code: '+977', label: '🇳🇵 +977 Nepal' },
+    { code: '+880', label: '🇧🇩 +880 Bangladesh' },
+    { code: '+94',  label: '🇱🇰 +94 Sri Lanka' },
+    { code: '+92',  label: '🇵🇰 +92 Pakistan' },
+    { code: '+966', label: '🇸🇦 +966 Saudi Arabia' },
+    { code: '+974', label: '🇶🇦 +974 Qatar' },
+    { code: '+49',  label: '🇩🇪 +49 Germany' },
+  ];
+
+  /**
+   * Split a stored phone string into (dialCode, localNumber). Tries the
+   * longest dial code first so "+971…" doesn't get mistaken as "+9 71…".
+   * Defaults to India (+91) when no recognized code is found.
+   */
+  private splitPhone(phone: string | null | undefined): { code: string; local: string } {
+    const trimmed = (phone ?? '').trim();
+    if (!trimmed) return { code: '+91', local: '' };
+    const sorted = [...this.dialCodes].sort((a, b) => b.code.length - a.code.length);
+    for (const dc of sorted) {
+      if (trimmed.startsWith(dc.code)) {
+        return { code: dc.code, local: trimmed.slice(dc.code.length).trim() };
+      }
+    }
+    return { code: '+91', local: trimmed };
+  }
+
   openPreview() { this.showPreview.set(true); }
   closePreview() { this.showPreview.set(false); }
 
@@ -224,14 +296,24 @@ export class ProfileComponent {
 
   startEdit() {
     const p = this.profile();
-    this.editModel = { name: p?.name, email: p?.email, phone: p?.phone, userRole: p?.userRole };
+    // Pre-split any existing stored phone so the dial-code dropdown and
+    // local-number input start in sync with what's in the DB.
+    const { code, local } = this.splitPhone(p?.phone);
+    this.selectedDialCode = code;
+    this.editModel = { name: p?.name, email: p?.email, phone: local, userRole: p?.userRole };
     this.isEditing.set(true);
   }
 
   cancel() { this.isEditing.set(false); }
 
   save() {
-    this.authService.editUserProfile(this.editModel);
+    // Recombine dial code + local number into a single canonical string
+    // on save so the backend / data layer never has to guess. Strip any
+    // leading "+" or whitespace from the local part — defensive against
+    // a paste that already included a country code.
+    const local = (this.editModel.phone ?? '').replace(/^[+\d]+\s/, '').trim();
+    const fullPhone = local ? `${this.selectedDialCode} ${local}` : '';
+    this.authService.editUserProfile({ ...this.editModel, phone: fullPhone });
     this.isEditing.set(false);
   }
 

@@ -7,10 +7,12 @@ import {
   Validators,
 } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { PropertyService } from '@/app/services/property-service';
 import { AuthService } from '@/app/services/auth.service';
-import { debounceTime, filter, forkJoin, map, switchMap } from 'rxjs';
+import { combineLatest, debounceTime, filter, forkJoin, map, of, startWith, switchMap, catchError } from 'rxjs';
 import { VastuOrientation } from '@/types';
+import { LocationPickerComponent } from '@/app/components/location-picker/location-picker.component';
 
 const AMENITIES_OPTIONS = [
   'Swimming Pool', 'Gym', 'Parking', 'Security', 'Power Backup',
@@ -21,7 +23,7 @@ const AMENITIES_OPTIONS = [
 @Component({
   selector: 'app-create-property',
   standalone: true,
-  imports: [ReactiveFormsModule, CommonModule, RouterLink],
+  imports: [ReactiveFormsModule, CommonModule, RouterLink, LocationPickerComponent],
   template: `
     <div class="page-wrapper">
 
@@ -118,6 +120,25 @@ const AMENITIES_OPTIONS = [
                 <input class="field-input" [class.invalid]="isInvalid('location')"
                   formControlName="location" type="text" placeholder="e.g. Sector 150, Noida Expressway">
                 @if (isInvalid('location')) { <span class="error-msg">Location is required</span> }
+              </div>
+
+              <!-- ── Map picker ────────────────────────────────────────
+                   Auto-pins when address fields (pincode/city/state/
+                   locality) change. User can drag the pin to fine-tune.
+                   Coords flow into the form's latitude/longitude controls
+                   and travel with the submit payload. -->
+              <div class="field-group">
+                <label class="field-label">
+                  Pin location on map
+                  @if (geocoding()) {
+                    <span class="geocoding-hint"> · finding…</span>
+                  }
+                </label>
+                <app-location-picker
+                  [lat]="form.get('latitude')?.value"
+                  [lng]="form.get('longitude')?.value"
+                  (coordsChanged)="onPinMoved($event)">
+                </app-location-picker>
               </div>
 
               <div class="field-group">
@@ -571,6 +592,7 @@ const AMENITIES_OPTIONS = [
     /* ── FIELDS ──────────────────────────────────── */
     .field-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
     .field-label { font-size: 0.78rem; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 0.05em; }
+    .geocoding-hint { color: #2c7be5; font-weight: 500; text-transform: none; letter-spacing: 0; }
     .required { color: var(--red); margin-left: 2px; }
     .muted-label { color: var(--muted); font-weight: 400; text-transform: none; font-size: 0.75rem; margin-left: 4px; }
     .field-input {
@@ -828,8 +850,21 @@ export class CreateProperty implements OnInit {
     sqft:  [null, [Validators.required, Validators.min(1)]],
     beds:  [2,    [Validators.required, Validators.min(0)]],
     baths: [2,    [Validators.required, Validators.min(0)]],
-    builtYear: [null], 
+    builtYear: [null],
+
+    // Geo — populated by the address-change debounced geocoder OR by
+    // the user dragging the pin on the map. Both fields are optional
+    // because the backend will fall back to its own geocoding if these
+    // come through as null.
+    latitude:  [null],
+    longitude: [null],
   });
+
+  // Loading flag for the geocoding HTTP call — used by the template to
+  // show a "Finding location..." hint near the map while we wait.
+  geocoding = signal(false);
+
+  private http = inject(HttpClient);
 
   // ── Lifecycle ──────────────────────────────────────────────────────────
   ngOnInit() {
@@ -872,7 +907,60 @@ export class CreateProperty implements OnInit {
       }
     });
 
-    
+    // ── Geocode the address whenever it changes ──────────────────
+    //
+    // Listen to all four address-shaped fields together. Whenever any
+    // change settles (debounce 800ms — long enough to avoid hammering
+    // Nominatim on every keystroke), build a query and look it up.
+    // The lat/lng form controls get the result; the LocationPicker
+    // component reactively re-pins the marker.
+    //
+    // If the user has already dragged the pin manually, we still
+    // refresh on address change — they can re-drag if they need to.
+    // (Could add a "user pinned" flag later to suppress; not worth it
+    //  for v1.)
+    const addressFields = ['location', 'city', 'state', 'pincode'].map(
+      f => this.form.get(f)!.valueChanges.pipe(startWith(this.form.get(f)!.value))
+    );
+
+    combineLatest(addressFields).pipe(
+      debounceTime(800),
+      switchMap(([location, city, state, pincode]) => {
+        const parts = [location, city, state, pincode, 'India']
+          .filter(p => p && String(p).trim().length > 0)
+          .map(p => String(p).trim());
+
+        // Don't fire on incomplete address — need at least city or pincode
+        // beyond just "India" for a useful result.
+        if (parts.length < 2) return of(null);
+
+        const query = parts.join(', ');
+        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`;
+
+        this.geocoding.set(true);
+        return this.http.get<any[]>(url).pipe(
+          catchError(() => of(null)),
+        );
+      }),
+    ).subscribe((results) => {
+      this.geocoding.set(false);
+      if (!results || results.length === 0) return;
+      const first = results[0];
+      const lat = parseFloat(first.lat);
+      const lon = parseFloat(first.lon);
+      if (Number.isFinite(lat) && Number.isFinite(lon)) {
+        this.form.patchValue({ latitude: lat, longitude: lon });
+      }
+    });
+  }
+
+  /**
+   * Called by LocationPicker when the user drags the marker or clicks
+   * elsewhere on the map. Pushes the new coords into the form so they
+   * travel with the submit payload.
+   */
+  onPinMoved(coords: { lat: number; lng: number }) {
+    this.form.patchValue({ latitude: coords.lat, longitude: coords.lng });
   }
 
   // ── Field helpers ──────────────────────────────────────────────────────
@@ -1040,6 +1128,10 @@ export class CreateProperty implements OnInit {
       beds:                   v.beds,
       baths:                  v.baths,
       builtYear:              v.builtYear || null,
+      // Map-picked or geocode-derived coords. Null is fine — backend
+      // will run its own geocoder as a fallback when these are missing.
+      latitude:               v.latitude ?? null,
+      longitude:              v.longitude ?? null,
       isFeatured:             this.isPaid && v.isFeatured,
       expresswayProximity:    v.expresswayProximity,
       isReraRegistered:       v.isReraRegistered,
