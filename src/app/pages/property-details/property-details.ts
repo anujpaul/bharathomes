@@ -34,7 +34,7 @@ interface Person {
 @Component({
   selector: 'app-property-details',
   standalone: true,
-  imports: [AsyncPipe, DecimalPipe, RouterLink, FormsModule, InrPricePipe, PropertyMapComponent],
+  imports: [AsyncPipe, FormsModule, InrPricePipe, PropertyMapComponent],
   template: `
     @if (property$ | async; as property) {
     <div class="page-container">
@@ -140,6 +140,8 @@ interface Person {
             <h3 class="map-heading">Location</h3>
             <app-property-map [lat]="property.latitude" [lng]="property.longitude"></app-property-map>
           </div>
+          <!-- <div class="divider"></div> -->
+          <div class="note text-gray-500"> * Location is approximate, not exact</div>
         </div>
 
         <!-- SIDE PANEL -->
