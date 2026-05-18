@@ -4,6 +4,7 @@ import { NavbarComponent } from './components/navbar/navbar.component';
 import { FooterComponent } from './components/footer/footer.component';
 // import { PROPERTIES, AGENTS } from '../data';
 import { RouterOutlet } from '@angular/router';
+import { Chat } from './components/chat/chat';
 
 @Component({
   selector: 'app-root',
@@ -12,7 +13,8 @@ import { RouterOutlet } from '@angular/router';
     CommonModule,
     NavbarComponent,
     FooterComponent,
-    RouterOutlet
+    RouterOutlet,
+    Chat
 ],
   templateUrl: `./app.component.html`
 })
