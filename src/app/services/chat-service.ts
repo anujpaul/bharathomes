@@ -36,7 +36,7 @@ export class ChatService {
    */
   send(message: string): Observable<ChatResponse> {
     const headers = this.getHeader();
-    return this.http.post<ChatResponse>(this.apiUrl, message , {headers});
+    return this.http.post<ChatResponse>(this.apiUrl, { message }, {headers});
   
   } 
 
