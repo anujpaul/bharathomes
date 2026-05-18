@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';import { Observable } from 'rxjs';
 
 /**
@@ -27,7 +27,7 @@ export class ChatService {
   // goes to /localhost:8085/... which 404s silently.
   // If the chat backend ever moves into the API app, swap this for
   // `${appConfig.baseUrl}/api/chat` or similar.
-  private apiUrl = 'http://localhost:8085/ai/bharathomes/chat';
+  private apiUrl = 'https://resume.azure-api.net/ai/bharathomes/chat';
 
   /**
    * Send the full conversation history each call. Stateless backend is
@@ -35,8 +35,19 @@ export class ChatService {
    * returns the assistant's reply. No session storage needed anywhere.
    */
   send(message: string): Observable<ChatResponse> {
-    return this.http.post<ChatResponse>(this.apiUrl, { message });
+    const headers = this.getHeader();
+    return this.http.post<ChatResponse>(this.apiUrl, message , {headers});
   
   } 
 
+  
+  getHeader(): HttpHeaders{
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Ocp-Apim-Subscription-Key': 'bac3b53a10684a79977325d79356784f'
+      })
+    return headers;
+   }
+
+  
 }
