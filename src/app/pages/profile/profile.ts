@@ -1,10 +1,23 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '@/app/services/auth.service';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { appConfig } from '@/app/config/app-config';
 import { UserProfile } from '@/types';
+
+interface PaymentHistoryItem {
+  id: string;
+  planCode: string;
+  planTier: string;
+  amountInr: number;
+  cardLast4: string;
+  cardBrand: string;
+  status: 'pending' | 'approved' | 'rejected';
+  submittedAt: string;
+  rejectionReason: string | null;
+}
 
 const USER_TYPES = [
   { value: 'buyer', label: 'Buyer', icon: '🏠' },
@@ -16,7 +29,7 @@ const USER_TYPES = [
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   
   template: `
   
@@ -73,7 +86,48 @@ const USER_TYPES = [
                 <span class="muted">Not set</span>
               }
           </p>
+          <p><strong>KYC Status:</strong> {{profile()?.kycStatus}}</p>
           </div>
+
+          <!-- Subscription / Billing -->
+          <div class="billing-card">
+            <div class="billing-top">
+              <span class="billing-heading">Subscription</span>
+              <a routerLink="/upgrade" class="change-link">
+                {{ profile()?.isPaid ? 'Change plan' : 'Upgrade →' }}
+              </a>
+            </div>
+            <span class="tier-chip" [attr.data-tier]="planTier()">{{ planLabel() }}</span>
+            @if (profile()?.isPaid) {
+              <p class="billing-detail">
+                @if(planLabel() != '○ Free'){
+                  @if (subscriptionActive()) {
+                    Active · expires {{ profile()?.subscriptionExpiry | date:'d MMM yyyy' }}
+                  } @else {
+                    <span class="expired-text">Expired · {{ profile()?.subscriptionExpiry | date:'d MMM yyyy' }}</span>
+                  }
+                }
+              </p>
+            } @else {
+              <p class="billing-detail muted">Free tier — upgrade to unlock more listings</p>
+            }
+          </div>
+
+          @if (paymentHistory().length > 0) {
+            <div class="history-section">
+              <p class="section-heading">Payment history</p>
+              @for (req of paymentHistory(); track req.id) {
+                <div class="history-row">
+                  <div class="history-left">
+                    <span class="history-plan">{{ req.planCode }}</span>
+                    <span class="history-meta">₹{{ req.amountInr.toLocaleString('en-IN') }} · {{ req.submittedAt | date:'d MMM yyyy' }}</span>
+                  </div>
+                  <span class="status-chip" [attr.data-status]="req.status">{{ statusLabel(req.status) }}</span>
+                </div>
+              }
+            </div>
+          }
+
           <button class="btn primary" (click)="startEdit()">Edit Profile</button>
         } @else {
           <div class="form">
@@ -202,14 +256,40 @@ const USER_TYPES = [
       font-size: 13px; 
       transition: all 0.15s; 
     }
-    .type-option.selected { 
-      border-color: #4f46e5; 
-      background: #ede9fe; 
-      color: #4f46e5; 
+    .type-option.selected {
+      border-color: #4f46e5;
+      background: #ede9fe;
+      color: #4f46e5;
     }
+
+    /* Billing card */
+    .billing-card { background: #f8f8ff; border: 1px solid #e8e0ff; border-radius: 12px; padding: 14px 16px; margin-top: 16px; }
+    .billing-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .billing-heading { font-size: 11px; font-weight: 700; color: #999; text-transform: uppercase; letter-spacing: 0.06em; }
+    .change-link { font-size: 12px; font-weight: 600; color: #4f46e5; text-decoration: none; }
+    .change-link:hover { text-decoration: underline; }
+    .tier-chip { display: inline-block; padding: 3px 12px; border-radius: 20px; font-size: 13px; font-weight: 700; background: #f3f4f6; color: #6b7280; }
+    .tier-chip[data-tier="pro"] { background: #fef3c7; color: #b45309; }
+    .tier-chip[data-tier="basic"] { background: #dbeafe; color: #1d4ed8; }
+    .tier-chip[data-tier="free"] { background: #f3f4f6; color: #6b7280; }
+    .billing-detail { margin: 6px 0 0; font-size: 12px; color: #666; }
+    .expired-text { color: #dc2626; }
+
+    /* Payment history */
+    .history-section { margin-top: 14px; padding-top: 14px; border-top: 1px solid #eee; }
+    .section-heading { font-size: 11px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 8px; }
+    .history-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
+    .history-row:last-child { border-bottom: none; }
+    .history-left { display: flex; flex-direction: column; gap: 2px; }
+    .history-plan { font-size: 13px; font-weight: 600; color: #333; }
+    .history-meta { font-size: 12px; color: #999; }
+    .status-chip { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 12px; background: #f3f4f6; color: #555; }
+    .status-chip[data-status="pending"] { background: #fef3c7; color: #b45309; }
+    .status-chip[data-status="approved"] { background: #dcfce7; color: #16a34a; }
+    .status-chip[data-status="rejected"] { background: #fef2f2; color: #dc2626; }
   `]
 })
-export class ProfileComponent {
+export class ProfileComponent implements OnInit {
 
   
   private authService = inject(AuthService);
@@ -320,5 +400,40 @@ export class ProfileComponent {
   get currentUserType() {
     return USER_TYPES.find(t => t.value === this.profile()?.userRole);
   }
-  
+
+  // ── Subscription / billing ──────────────────────────────────────────────
+
+  paymentHistory = signal<PaymentHistoryItem[]>([]);
+
+  subscriptionActive = computed(() => {
+    const p = this.profile();
+    if (!p?.isPaid) return false;
+    if (!p.subscriptionExpiry) return true;
+    return new Date(p.subscriptionExpiry) > new Date();
+  });
+
+  planTier = computed(() => {
+    const p = this.profile();
+    if (!p?.isPaid || !this.subscriptionActive()) return 'free';
+    return p.currentPlanTier ?? 'free';
+  });
+
+  planLabel = computed(() => {
+    const tier = this.planTier();
+    if (tier === 'pro') return '⭐ Pro';
+    if (tier === 'basic') return '✦ Basic';
+    return '○ Free';
+  });
+
+  statusLabel(status: string): string {
+    if (status === 'pending') return '⏳ Pending';
+    if (status === 'approved') return '✓ Approved';
+    if (status === 'rejected') return '✕ Rejected';
+    return status;
+  }
+
+  ngOnInit(): void {
+    this.http.get<PaymentHistoryItem[]>(`${appConfig.baseUrl}/api/payment/my-requests`)
+      .subscribe({ next: items => this.paymentHistory.set(items), error: () => {} });
+  }
 }
